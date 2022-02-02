@@ -112,11 +112,13 @@ public abstract class T3_Base extends LinearOpMode {
         resetAngle();
         if(matchType == 1){
             initAngle = -179;
+            currAngle = -179;
             odometry = new T3_T265Odometry(-179, hardwareMap);
             wheelOdometry = new T3_DifferentialDriveOdometry(0, 0, -179);
         }
         else{
             initAngle = 0;
+            currAngle = 0;
             odometry = new T3_T265Odometry(0, hardwareMap);
             wheelOdometry = new T3_DifferentialDriveOdometry(0, 0, 0);
         }
@@ -178,7 +180,6 @@ public abstract class T3_Base extends LinearOpMode {
 
         // Change in angle = current angle - previous angle
         double deltaAngle = orientation.firstAngle - lastAngles.firstAngle;
-
         if (deltaAngle < -180) {
             deltaAngle += 360;
         } else if (deltaAngle > 180) {
@@ -521,7 +522,7 @@ public abstract class T3_Base extends LinearOpMode {
             currTime = time.milliseconds();
             double xDiff = targetX - odometry.getX();
             double yDiff = targetY - odometry.getY();
-            double angDiff = Angle.angleDifference( Angle.normalize(getAngle()) , // get steering angle
+            double angDiff = Angle.angleDifference( Angle.normalize(getRelativeAngle()) , // get steering angle
                     Angle.normalize( Math.toDegrees(
                             Math.atan2(yDiff, xDiff)
                             )
@@ -549,7 +550,7 @@ public abstract class T3_Base extends LinearOpMode {
                     driveSpeed + turnSpeed,
                     driveSpeed - turnSpeed,
                     driveSpeed + turnSpeed);
-            
+
             prevTime = currTime;
             prevError = xDiff;
 
@@ -560,6 +561,8 @@ public abstract class T3_Base extends LinearOpMode {
         }
         stopBot();
     }
+
+
 
 
     public void autoAimToWobble(String opMode){

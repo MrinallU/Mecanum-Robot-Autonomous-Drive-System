@@ -32,7 +32,7 @@ public class CycleTest extends T3_Base {
         Point [] pts = {new Point(0, 0), new Point(-71, 0)};
         crossBarrier(-71, 0, 0.5, 5000, 0, false, true);
         sleep(1000);
-        crossBarrier(0, 0, 0.5, 5000, 0, false, false);
+        crossBarrier(0, 0, 0.5, 5000, 0, true, false);
         sleep(1000);
         crossBarrier(-71, 0, 0.5, 5000, 0, false, true);
         odometry.stopT265();

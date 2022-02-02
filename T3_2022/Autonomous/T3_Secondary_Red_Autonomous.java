@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.T3_2022.T3_Base;
 
 @Autonomous(name="T3_Secondary_Red_Autonomous", group="Autonomous")
 public class T3_Secondary_Red_Autonomous extends T3_Base {
-    int pos =  0;
+    int pos =  1;
     String elementDiagram = "";
 
     @Override
@@ -23,7 +23,7 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
         waitForStart();
 
 
-        pos = camera.readBarcode("redSecondary");
+        //pos = camera.readBarcode("redSecondary");
 
 
         if(pos == 0){
@@ -33,7 +33,7 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
             elementDiagram = "☒ ☐ ☐";
             telemetry.update();
         }else if(pos == 1){
-            arm.moveMid();
+            arm.moveMidRedSecond();
             telemetry.addData("Wobble Level: ", "Middle");
             telemetry.addData("Shipping Element Placement: ", "☐ ☒ ☐");
             elementDiagram = "☐ ☒ ☐";
@@ -62,55 +62,53 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
             moveTicksBack(900, 4000, 0.4, 20, this); //mid and top deposit
         }
 
-        sleep(500);
+        sleep(250);
         arm.dump();
         sleep(500);
 
-        // move to barrier
-        moveTicksFront(2500, 4000, 0.4, 20, this);
-        sleep(250);
+        // move into barrier
+        yTo(40, 4000, 0.7, 3, this, true, true);
         container.dumpBlock();
-        arm.sweepPos();
-        turnToV2(60, 2000, this);
+        arm.sweepPos(); // reset arm
         sleep(250);
-
-
-        sleep(250);
+        turnToV2(60, 2000, this); // turn to freight stack
         sweeper.sweep();
-        moveTicksFront(440, 4000, 0.4, 20, this);
+
+        moveTicksFront(440, 4000, 0.4, 20, this); // sweep freight
         sleep(1000);
         sweeper.stop();
         container.sweepBlock();
-
         sweeper.dump();
         sleep(1000);
         sweeper.stop();
 
-        // replace with cycle code
-        moveTicksBack(400, 4000, 0.4, 20, this);
-
+        sleep(250);
+        moveTicksBack(440, 4000, 0.4, 20, this); // align back to wobble
+        sleep(250);
         turnToV2(90, 4000, this);
         sleep(250);
 
-        moveTicksBack(500, 4000, 0.5, 20,this);
-        sleep(250);
-        arm.moveToPosition(500);
 
+        resetAngle();
+        odometry.setPose(0, 0, 0); //  reset for cycle spline
 
-        moveTicksBack(2000, 4000, 0.5, 20,this);
-        sleep(250);
-
-
+        crossBarrier(-50, 0, 0.6, 50000, 1, true, false); // move to wobble.
         arm.moveTop();
-        sleep(1500);
-
-        arm.dump();
+        container.dumpRelease();
         sleep(500);
         container.dumpBlock();
+//        crossBarrier(10, 18, 0.5, 5000, 0, false, false);
 
-        moveTicksFront(2750, 6000, 0.4, 20, this);
-        arm.sweepPos();
-        sleep(500);
+        yTo( 50, 4000, 0.7, 3, this, true, true);
+
+        while(opModeIsActive()){
+            resetCache();
+            odometry.updatePosition();
+            telemetry.addLine("cam pos " + odometry.outStr);
+            telemetry.addLine("imu angle " + getAngle());
+        }
+
+
         odometry.stopT265();
     }
 }

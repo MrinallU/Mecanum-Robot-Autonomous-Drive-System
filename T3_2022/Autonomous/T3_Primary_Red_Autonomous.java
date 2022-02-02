@@ -105,7 +105,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
         turnToV2(-180, 4000, this);
         sleep(500);
 
-        moveTicksBack(530, 1500, 0.1, 20, this);
+        moveTicksBack(570, 1500, 0.1, 20, this);
         sleep(500);
 
         startCarousel();
