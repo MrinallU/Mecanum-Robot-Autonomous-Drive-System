@@ -58,7 +58,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
         sleep(500);
 
         
-
+        // todo, if time change the move back to odo
         if(pos == 2){
             arm.moveTop();
             sleep(2000);
@@ -68,7 +68,6 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
             arm.dump();
             sleep(500);
-
             moveTicksBack(430, 4000, 0.5, 20, this);
         }else if(pos == 1){
             arm.moveMid();

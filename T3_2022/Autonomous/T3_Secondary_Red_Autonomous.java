@@ -67,39 +67,25 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
         sleep(500);
 
         // move into barrier
-        yTo(40, 4000, 0.7, 3, this, true, true);
+        yTo(40, 4000, 0.7, 3, this, true, true); // @Parth tune this value
         container.dumpBlock();
         arm.sweepPos(); // reset arm
         sleep(250);
         turnToV2(60, 2000, this); // turn to freight stack
         sweeper.sweep();
 
-        moveTicksFront(440, 4000, 0.4, 20, this); // sweep freight
+        xTo(7, 3000,0.4, 1, this, false); // @Parth tune this value
+//        moveTicksFront(440, 4000, 0.4, 20, this); // sweep freight
         sleep(1000);
         sweeper.stop();
         container.sweepBlock();
         sweeper.dump();
         sleep(1000);
         sweeper.stop();
+        
+        moveTicksBack(440, 4000, 0.4, 20, this); // sweep freight
 
-        sleep(250);
-        moveTicksBack(440, 4000, 0.4, 20, this); // align back to wobble
-        sleep(250);
-        turnToV2(90, 4000, this);
-        sleep(250);
-
-
-        resetAngle();
-        odometry.setPose(0, 0, 0); //  reset for cycle spline
-
-        crossBarrier(-50, 0, 0.6, 50000, 1, true, false); // move to wobble.
-        arm.moveTop();
-        container.dumpRelease();
-        sleep(500);
-        container.dumpBlock();
-//        crossBarrier(10, 18, 0.5, 5000, 0, false, false);
-
-        yTo( 50, 4000, 0.7, 3, this, true, true);
+        arm.sweepPosReset();
 
         while(opModeIsActive()){
             resetCache();
@@ -112,3 +98,25 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
         odometry.stopT265();
     }
 }
+
+
+
+//
+//        sleep(250);
+//        moveTicksBack(440, 4000, 0.4, 20, this); // align back to wobble
+//        sleep(250);
+//        turnToV2(90, 4000, this);
+//        sleep(250);
+//
+//
+//        resetAngle();
+//        odometry.setPose(0, 0, 0); //  reset for cycle spline
+//        arm.moveTop();
+//        crossBarrier(-50, 0, 0.6, 50000, 1, true, false); // move to wobble.
+//
+//        container.dumpRelease();
+//        sleep(500);
+//        container.dumpBlock();
+////        crossBarrier(10, 18, 0.5, 5000, 0, false, false);
+//
+//        xTo( 50, 4000, 0.7, 3, this, true, true);

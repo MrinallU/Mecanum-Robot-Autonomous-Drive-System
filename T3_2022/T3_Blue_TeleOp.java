@@ -50,7 +50,7 @@ public class T3_Blue_TeleOp extends T3_Base {
 
         init(0);
         initServos();
-        initOdometry();
+//        initOdometry();
         sleep(2000);
 
         telemetry.addData("Status", "Initialized");
@@ -63,7 +63,7 @@ public class T3_Blue_TeleOp extends T3_Base {
         while (opModeIsActive()) {
             resetCache();
 
-            odometry.updatePosition();
+//            odometry.updatePosition();
             // update odometry convert tick velocity to inch velocity
             wheelOdometry.updatePosition(
                     leftDrive.encoderReading(),

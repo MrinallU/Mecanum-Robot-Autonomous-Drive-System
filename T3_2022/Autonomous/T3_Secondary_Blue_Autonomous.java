@@ -31,7 +31,8 @@ public class T3_Secondary_Blue_Autonomous extends T3_Base {
             arm.moveTop();
         }
 
-        xTo(-10, 3000, 0.3,  1, this, true );
+
+        xTo(-10, 3000, 0.3,  1, this, true);
         sleep(250);
 
         turnToV2(90, 3000, this);
@@ -43,11 +44,10 @@ public class T3_Secondary_Blue_Autonomous extends T3_Base {
         arm.dump();
         sleep(500);
 
-        // replace with cycle code
         yTo(0, 3000, 0.3,  1, this, true );
         sleep(250);
 
-        moveTicksBack(1500, 2000, 0.5, 40, this);
+        moveTicksBack(1500, 2000, 0.5, 40, this); // @Parth change this to camera
         sleep(250);
         container.dumpBlock();
         arm.sweepPos();

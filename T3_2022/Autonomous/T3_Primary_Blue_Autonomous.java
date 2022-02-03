@@ -6,7 +6,7 @@ import org.firstinspires.ftc.teamcode.T3_2022.Modules.T3_Camera;
 import org.firstinspires.ftc.teamcode.T3_2022.T3_Base;
 
 @Autonomous(name="T3_Primary_Blue_Autonomous", group = "Autonomous")
-public class T3_Primary_Blue_Autonomous extends T3_Base{
+public class T3_Primary_Blue_Autonomous extends T3_Base {
     int pos = 0;
     String elementDiagram = "";
     int bottomOffset = 0;
@@ -80,7 +80,9 @@ public class T3_Primary_Blue_Autonomous extends T3_Base{
 
 
         //600
-        moveTicksFront(550 + bottomOffset, 4000, 0.4, 20, this);
+        // change to odo...
+        yTo(0, 4000, 0.4, 1, this, true); // @Parth tune this
+//        moveTicksFront(550 + bottomOffset, 4000, 0.4, 20, this); <--- this is inconsistent compared to odo
         container.dumpBlock();
         sleep(500);
         arm.moveToPosition(300);
@@ -96,7 +98,7 @@ public class T3_Primary_Blue_Autonomous extends T3_Base{
         sleep(500);
 
 
-        moveTicksBack(1155, 6000, 0.2, 20, this);
+        moveTicksBack(1155, 6000, 0.2, 20, this); // @Parth tune this: move to carousel
         sleep(500);
 
         startBlueCarousel();
