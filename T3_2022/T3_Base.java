@@ -317,7 +317,7 @@ public abstract class T3_Base extends LinearOpMode {
                 Y = odometry.getY();
 
             double yDiff = targetY - Y;
-            double d = k_d * (yDiff - prevError) / (currTime - prevTime);
+            double d =  k_d * (yDiff - prevError) / (currTime - prevTime);
             double drive = Range.clip((yDiff * 0.055)+d, -powerCap, powerCap) * -1;
 
             if(negate){
@@ -336,6 +336,7 @@ public abstract class T3_Base extends LinearOpMode {
 
             telemetry.addLine(wheelOdometry.displayPositions());
             telemetry.addLine(odometry.displayPositions());
+            telemetry.addData("Diff ", yDiff);
             telemetry.update();
         }
         boolean works =  time.milliseconds() < timeout;
@@ -350,7 +351,7 @@ public abstract class T3_Base extends LinearOpMode {
     }
 
     public boolean yTo(double targetY, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate){
-        return xTo( targetY,  timeout,  powerCap,  minDifference,  opMode,  negate, false);
+        return yTo( targetY,  timeout,  powerCap,  minDifference,  opMode,  negate, false);
     }
 
     // tick diff should be no less than 22!

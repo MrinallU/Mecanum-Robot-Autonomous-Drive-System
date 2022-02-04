@@ -63,7 +63,7 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
             moveTicksBack(600, 4000, 0.4, 20, this);
             bottomOffset = 60;
         }else if(pos == 1){
-            arm.moveMid();
+            arm.moveMidBluePrim();
             sleep(1500);
             moveTicksBack(660, 4000, 0.4, 20, this);
         }else{
@@ -81,7 +81,7 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
 
         //600
         // change to odo...
-        yTo(0, 4000, 0.4, 1, this, true); // @Parth tune this
+        yTo(4, 9000, 0.1, 1, this, true); // @Parth tune this
 //        moveTicksFront(550 + bottomOffset, 4000, 0.4, 20, this); <--- this is inconsistent compared to odo
         container.dumpBlock();
         sleep(500);
@@ -91,7 +91,7 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
         turnToV2(180, 4000, this);
         sleep(500);
 
-        moveTicksBack(200, 3000, 0.4, 20, this);
+        moveTicksBack(150, 3000, 0.4, 20, this);
         sleep(250);
 
         turnToV2(-92, 4000, this);

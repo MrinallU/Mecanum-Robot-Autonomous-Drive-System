@@ -32,6 +32,12 @@ public class T3_Outtake {
         moveToPosition(1150);
     }
 
+    public void moveMidBluePrim(){
+        container.sweepBlock();
+        moveToPosition(1140);
+    }
+
+
     public void moveMidRedSecond(){
         container.sweepBlock();
         moveToPosition(1140);

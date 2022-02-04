@@ -74,18 +74,25 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
         turnToV2(60, 2000, this); // turn to freight stack
         sweeper.sweep();
 
-        xTo(7, 3000,0.4, 1, this, false); // @Parth tune this value
+        moveTicksFront(500, 4000, 0.4, 20, this); // sweep freight
 //        moveTicksFront(440, 4000, 0.4, 20, this); // sweep freight
-        sleep(1000);
+        sleep(2000);
         sweeper.stop();
         container.sweepBlock();
         sweeper.dump();
-        sleep(1000);
+        sleep(2000);
         sweeper.stop();
-        
-        moveTicksBack(440, 4000, 0.4, 20, this); // sweep freight
 
-        arm.sweepPosReset();
+        moveTicksBack(500, 4000, 0.4, 20, this); // sweep freight
+//
+//        arm.moveTop();
+
+        turnToV2(86, 4000, this);
+//        sleep(250);
+//
+//        yTo(-20, 4000, 0.7, 3, this, true, true); // @Parth tune this value
+
+
 
         while(opModeIsActive()){
             resetCache();
