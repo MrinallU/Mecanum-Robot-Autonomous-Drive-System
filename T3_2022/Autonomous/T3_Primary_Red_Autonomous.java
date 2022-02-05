@@ -66,6 +66,9 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
             moveTicksFront(400, 4000, 0.5, 20, this);
             sleep(500);
 
+            turnToV2(90, 4000, this);
+            sleep(250);
+
             arm.dump();
             sleep(500);
             moveTicksBack(430, 4000, 0.5, 20, this);
@@ -75,6 +78,9 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
             moveTicksFront(350, 4000, 0.5, 20, this);
             sleep(500);
+
+            turnToV2(90, 4000, this);
+            sleep(250);
 
             arm.dump();
             sleep(500);
@@ -87,11 +93,16 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
             moveTicksFront(250, 4000, 0.5, 20, this);
             sleep(500);
 
+            turnToV2(90, 4000, this);
+            sleep(250);
+
             arm.dump();
             sleep(500);
 
             moveTicksBack(200, 4000, 0.5, 20, this);
         }
+
+        // normalize move back to odo pos
 
         sleep(500);
         arm.container.dumpBlock();
