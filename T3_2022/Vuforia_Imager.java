@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.T3_2022.Modules.T3_Camera;
 
-@Disabled
 @TeleOp(name="Vuforia-Imager-T3", group="T3")
 public class Vuforia_Imager extends T3_Base {
     boolean x2P;

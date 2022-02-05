@@ -23,7 +23,7 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
         waitForStart();
 
 
-        //pos = camera.readBarcode("redSecondary");
+        pos = camera.readBarcode("redSecondary");
 
 
         if(pos == 0){
@@ -80,7 +80,7 @@ public class T3_Secondary_Red_Autonomous extends T3_Base {
         sweeper.stop();
         container.sweepBlock();
         sweeper.dump();
-        sleep(2000);
+        sleep(4000);
         sweeper.stop();
 
         moveTicksBack(500, 4000, 0.4, 20, this); // sweep freight

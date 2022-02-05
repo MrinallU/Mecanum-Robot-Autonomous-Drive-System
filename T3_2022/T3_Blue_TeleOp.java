@@ -89,7 +89,7 @@ public class T3_Blue_TeleOp extends T3_Base {
             aLP = aP;
             aP = gamepad1.a;
             if(aP && !aLP){
-                powerMult = slowToggle ? 0.3 : 0.9;
+                powerMult = slowToggle ? 0.3 : 1;
                 slowToggle = !slowToggle;
             }
 
@@ -207,7 +207,7 @@ public class T3_Blue_TeleOp extends T3_Base {
 
 
             if(gamepad1.y){
-                startCarouselBlue(carouselTime.milliseconds());
+                startBlueCarousel();
             }else{
                 stopCarousel();
                 carouselTime.reset();
@@ -226,7 +226,7 @@ public class T3_Blue_TeleOp extends T3_Base {
             telemetry.update();
         }
 
-        odometry.stopT265();
+//        odometry.stopT265();
         sleep(2000);
     }
 }

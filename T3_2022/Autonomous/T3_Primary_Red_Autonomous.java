@@ -25,7 +25,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
         odometry.updatePosition();
 
-        //pos = camera.readBarcode("redPrimary");
+        pos = camera.readBarcode("redPrimary");
         if(pos == 0){
             telemetry.addData("Wobble Level: ", "Bottom");
             telemetry.addData("Shipping Element Placement: ", "☒ ☐ ☐");
@@ -51,7 +51,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
         telemetry.update();
 
 
-        moveTicksBack(400, 4000, 0.5, 20,this);
+        moveTicksBack(300, 4000, 0.5, 20,this);
         sleep(500);
 
         turnToV2(90, 4000, this);
@@ -59,7 +59,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
         
         // todo, if time change the move back to odo
-        if(pos == 2){
+        if(pos == 0){
             arm.moveTop();
             sleep(2000);
 
@@ -71,7 +71,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
             arm.dump();
             sleep(500);
-            moveTicksBack(430, 4000, 0.5, 20, this);
+//            moveTicksBack(430, 4000, 0.5, 20, this);
         }else if(pos == 1){
             arm.moveMid();
             sleep(2000);
@@ -85,7 +85,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
             arm.dump();
             sleep(500);
 
-            moveTicksBack(200, 4000, 0.5, 20, this);
+//            moveTicksBack(200, 4000, 0.5, 20, this);
         }else{
             arm.moveBottom();
             sleep(2000);
@@ -99,23 +99,21 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
             arm.dump();
             sleep(500);
 
-            moveTicksBack(200, 4000, 0.5, 20, this);
+//            moveTicksBack(200, 4000, 0.5, 20, this);
         }
 
-        // normalize move back to odo pos
+        yTo(-21, 4000, 0.3, 1, this, true);
 
         sleep(500);
         arm.container.dumpBlock();
         arm.moveToPosition(300);
         sleep(1000);
 
-        moveTicksBack(700, 4000, 0.5, 20,this);
-        sleep(500);
 
         turnToV2(-180, 4000, this);
         sleep(500);
 
-        moveTicksBack(570, 1500, 0.1, 20, this);
+        moveTicksBack(250, 1500, 0.1, 20, this);
         sleep(500);
 
         startCarousel();

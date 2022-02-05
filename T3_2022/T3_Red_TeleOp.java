@@ -53,7 +53,7 @@ public class T3_Red_TeleOp extends T3_Base {
 
         init(0);
         initServos();
-        initOdometry();
+//        initOdometry();
         sleep(2000);
 
         telemetry.addData("Status", "Initialized");
@@ -66,7 +66,7 @@ public class T3_Red_TeleOp extends T3_Base {
         while (opModeIsActive()) {
             resetCache();
 
-            odometry.updatePosition();
+//            odometry.updatePosition();
             // update odometry convert tick velocity to inch velocity
             wheelOdometry.updatePosition(
                     leftDrive.encoderReading(),
@@ -90,7 +90,7 @@ public class T3_Red_TeleOp extends T3_Base {
             aLP = aP;
             aP = gamepad1.a;
             if(aP && !aLP){
-                powerMult = slowToggle ? 0.3 : 0.9;
+                powerMult = slowToggle ? 0.3 : 1;
                 slowToggle = !slowToggle;
             }
 
@@ -209,7 +209,7 @@ public class T3_Red_TeleOp extends T3_Base {
 
 
             if(gamepad1.y){
-                startCarousel(carouselTime.milliseconds());
+                startCarousel();
             }else{
                 stopCarousel();
                 carouselTime.reset();

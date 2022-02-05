@@ -583,7 +583,7 @@ public abstract class T3_Base extends LinearOpMode {
 
 
     public void startCarousel(){
-        carousel.setPower(0.4);
+        carousel.setPower(1);
     }
 
     // gradual carousel acceleration
@@ -601,7 +601,7 @@ public abstract class T3_Base extends LinearOpMode {
     }
 
     public void startBlueCarousel(){
-        carousel.setPower(-0.4);
+        carousel.setPower(-1);
     }
     public void stopCarousel(){
         carousel.setPower(0);

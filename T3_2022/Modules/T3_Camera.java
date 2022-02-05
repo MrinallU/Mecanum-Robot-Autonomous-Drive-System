@@ -42,12 +42,12 @@ public class T3_Camera {
         VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
         bm = vuforia.convertFrameToBitmap(closeableFrame);
         if(auto == "redPrimary"){
-            posOne = calculateAverageRGB(bm, 976, 31, 1087, 80);
-            posTwo = calculateAverageRGB(bm, 439, 81, 558, 151);
+            posOne = calculateAverageRGB(bm, 56, 57, 129, 95);
+            posTwo = calculateAverageRGB(bm, 512, 50, 600, 115);
             posThree = calculateAverageRGB(bm, 0, 0, 0, 0);
         }else if(auto == "redSecondary"){
-            posOne = calculateAverageRGB(bm, 410, 61, 526, 137);
-            posTwo = calculateAverageRGB(bm, 62, 92, 112, 170);
+            posOne = calculateAverageRGB(bm, 448, 48, 550, 105);
+            posTwo = calculateAverageRGB(bm, 36, 52, 134, 113);
             posThree = calculateAverageRGB(bm, 0, 0, 0, 0);
         }else if(auto == "bluePrimary"){
             posOne = calculateAverageRGB(bm, 420, 16, 535, 75);
@@ -59,7 +59,7 @@ public class T3_Camera {
             posThree = calculateAverageRGB(bm, 56, 106, 152, 181);
         }
 
-        if(auto.contains("red")){
+        if(auto == "redPrimary"){
             if(posOne[3] < blueThreshold){
                 return 0;
             }else if(posTwo[3] < blueThreshold){
@@ -75,7 +75,15 @@ public class T3_Camera {
             }else{
                 return 2;
             }
-        }else {
+        }else if(auto == "redSecondary"){
+            if(posOne[3] < blueThreshold){
+                return 0;
+            }else if(posTwo[3] < blueThreshold){
+                return 1;
+            }else{
+                return 2;
+            }
+        } else{
             if (posThree[1] < redThreshold) {
                 return 2;
             } else if (posTwo[1] < redThreshold) {

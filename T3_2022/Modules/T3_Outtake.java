@@ -50,7 +50,7 @@ public class T3_Outtake {
 
     public void moveBottomRedSecond(){
         container.sweepBlock();
-        moveToPosition(1260);
+        moveToPosition(1250);
     }
 
     public void moveBottomBlue(){
