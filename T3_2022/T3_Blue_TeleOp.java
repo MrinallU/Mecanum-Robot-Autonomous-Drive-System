@@ -31,6 +31,8 @@ public class T3_Blue_TeleOp extends T3_Base {
     boolean b2P = false;
     boolean slowToggle = true;
     boolean safeftyLock = true;
+    boolean switchArmPowerCurr, switchArmPowerLast;
+    boolean sharedHubMode = false;
 
     int toggle1 = 1;
     int toggle2 = 1;
@@ -123,6 +125,12 @@ public class T3_Blue_TeleOp extends T3_Base {
 
 
             // arm
+            switchArmPowerLast = switchArmPowerCurr;
+            switchArmPowerCurr = gamepad2.b;
+
+            if(!switchArmPowerLast && switchArmPowerCurr){
+                sharedHubMode = !sharedHubMode;
+            }
             dPadRightLast2 = dPadRight2;
             dPadRight2 = gamepad2.dpad_right;
 
@@ -135,15 +143,30 @@ public class T3_Blue_TeleOp extends T3_Base {
             dPadLeftLast2 = dPadLeft2;
             dPadLeft2 = gamepad2.dpad_left;
 
+            if(!dPadLeftLast2 && dPadLeft2){
+
+                arm.sweepPosTeleop();
+            }
+
+
             if(gamepad2.dpad_up) {
-                arm.motor1.setPower(0.25);
+                if(!sharedHubMode){
+                    arm.motor1.setPower(0.4);
+                }else{
+                    arm.motor1.setPower(0.2);
+                }
             }else if(gamepad2.dpad_down){
-                arm.motor1.setPower(-0.25);
+                if(!sharedHubMode){
+                    arm.motor1.setPower(-0.4);
+                }else{
+                    arm.motor1.setPower(-0.2);
+                }
             }else{
                 if(arm.motor1.retMotorEx().getCurrentPosition() < 25) {
                     arm.motor1.setPower(0);
+                    arm.motor1.useEncoder();
                 }else{
-                    arm.motor1.setPower(-0.01);
+                    arm.motor1.setPower(-0.001);
                 }
             }
 
@@ -153,13 +176,20 @@ public class T3_Blue_TeleOp extends T3_Base {
             }
 
             // manual blocker controls
+
+
             aL2P = a2P;
             a2P = gamepad2.a;
             if(!aL2P && a2P){
                 if(toggle1 % 2 != 0) {
                     container.dumpBlock();
                 }else{
-                    container.dumpRelease();
+                    if(sharedHubMode){
+                        container.dumpReleaseShared();
+                    }else{
+                        container.dumpRelease();
+                    }
+
                 }
                 toggle1++;
             }

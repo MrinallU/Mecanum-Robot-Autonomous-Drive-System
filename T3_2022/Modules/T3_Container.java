@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class T3_Container {
     Servo frontBlocker, sideBlocker;
-    double frontBlockPos = 0.20, sideBlockPos = 0, frontReleasePos = 1, sideReleasePos = 1;
+    double frontBlockPos = 0.20, sideBlockPos = 0.3, frontReleasePos = 1, sideReleasePos = 0.7, sideSharedHubOpen = 0;
     
     public T3_Container(Servo frontBlocker, Servo sideBlocker){
         this.frontBlocker = frontBlocker;
@@ -18,6 +18,7 @@ public class T3_Container {
     public void   dumpBlock(){ // after sweeping close to go to the hub
         sideBlocker.setPosition(sideBlockPos);
     }
+    public void dumpReleaseShared(){sideBlocker.setPosition(sideSharedHubOpen);}
 
     public void dumpRelease(){ // release
         sideBlocker.setPosition(sideReleasePos);
@@ -29,7 +30,7 @@ public class T3_Container {
 
     public void init(){
         frontBlocker.setPosition(frontReleasePos);
-        sideBlocker.setPosition(sideBlockPos);
+        sideBlocker.setPosition(sideSharedHubOpen);
     }
 
     public void initAuto(){

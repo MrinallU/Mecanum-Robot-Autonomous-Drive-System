@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.T3_2022.T3_Base;
 
 @Autonomous(name="T3_Primary_Red_Autonomous", group="Autonomous")
 public class T3_Primary_Red_Autonomous extends T3_Base {
-    int pos =  0;
+    int pos =  1;
     String elementDiagram = "";
 
     @Override
@@ -25,7 +25,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
         odometry.updatePosition();
 
-        pos = camera.readBarcode("redPrimary");
+        //pos = camera.readBarcode("redPrimary");
         if(pos == 0){
             telemetry.addData("Wobble Level: ", "Bottom");
             telemetry.addData("Shipping Element Placement: ", "☒ ☐ ☐");

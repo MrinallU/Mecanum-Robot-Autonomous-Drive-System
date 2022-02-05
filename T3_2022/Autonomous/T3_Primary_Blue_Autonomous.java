@@ -51,7 +51,7 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
         telemetry.addLine("Pos: " + odometry.outStr);
         telemetry.update();
 
-        moveTicksBack(500, 4000, 0.4, 20, this);
+        moveTicksBack(450, 4000, 0.4, 20, this);
         sleep(500);
         turnToV2(93, 4000, this);
         sleep(500);
@@ -91,14 +91,14 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
         turnToV2(180, 4000, this);
         sleep(500);
 
-        moveTicksBack(150, 3000, 0.4, 20, this);
+        moveTicksBack(50, 3000, 0.4, 20, this);
         sleep(250);
 
         turnToV2(-92, 4000, this);
         sleep(500);
 
 
-        moveTicksBack(1155, 6000, 0.2, 20, this); // @Parth tune this: move to carousel
+        moveTicksBack(1200, 6000, 0.2, 20, this); // @Parth tune this: move to carousel
         sleep(500);
 
         startBlueCarousel();
@@ -114,6 +114,7 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
         moveTicksBack(1000, 4000, 0.4, 20, this);
         sleep(250);
         turnToV2(0, 4000, this);
+        moveTicksBack(50, 4000, 0.2, 20, this);
 
         sleep(500);
     }
