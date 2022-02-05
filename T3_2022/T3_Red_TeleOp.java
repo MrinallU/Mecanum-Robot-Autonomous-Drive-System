@@ -31,7 +31,11 @@ public class T3_Red_TeleOp extends T3_Base {
     boolean slowToggle = true;
     boolean safeftyLock = true;
     boolean posReached = true;
-
+    double armPower = 0.4;
+    boolean switchArmPowerCurr, switchArmPowerLast;
+    boolean sharedHubMode = false;
+    boolean switchSideOpenLast = false, switchSideOpenCurr = false;
+    boolean sharedHubModeOn = false;
     int toggle1 = 1;
     int toggle2 = 1;
 
@@ -122,6 +126,13 @@ public class T3_Red_TeleOp extends T3_Base {
 
 
             // arm
+
+            switchArmPowerLast = switchArmPowerCurr;
+            switchArmPowerCurr = gamepad2.b;
+
+            if(!switchArmPowerLast && switchArmPowerCurr){
+                sharedHubMode = !sharedHubMode;
+            }
             dPadRightLast2 = dPadRight2;
             dPadRight2 = gamepad2.dpad_right;
 
@@ -140,10 +151,18 @@ public class T3_Red_TeleOp extends T3_Base {
             }
 
 
-            if(gamepad2.dpad_up && posReached) {
-                arm.motor1.setPower(0.4);
-            }else if(gamepad2.dpad_down && posReached){
-                arm.motor1.setPower(-0.4);
+            if(gamepad2.dpad_up) {
+                if(!sharedHubMode){
+                    arm.motor1.setPower(0.4);
+                }else{
+                    arm.motor1.setPower(0.2);
+                }
+            }else if(gamepad2.dpad_down){
+                if(!sharedHubMode){
+                    arm.motor1.setPower(-0.4);
+                }else{
+                    arm.motor1.setPower(-0.2);
+                }
             }else{
                 if(arm.motor1.retMotorEx().getCurrentPosition() < 25) {
                     arm.motor1.setPower(0);
@@ -159,13 +178,20 @@ public class T3_Red_TeleOp extends T3_Base {
             }
 
             // manual blocker controls
+
+
             aL2P = a2P;
             a2P = gamepad2.a;
             if(!aL2P && a2P){
                 if(toggle1 % 2 != 0) {
                     container.dumpBlock();
                 }else{
-                    container.dumpRelease();
+                    if(sharedHubMode){
+                        container.dumpReleaseShared();
+                    }else{
+                        container.dumpRelease();
+                    }
+
                 }
                 toggle1++;
             }
@@ -200,6 +226,7 @@ public class T3_Red_TeleOp extends T3_Base {
             telemetry.addLine("odo pos " + wheelOdometry.displayPositions());
             telemetry.addLine("imu angle " + getRelativeAngle());
             telemetry.addLine("cTime " + carouselTime.milliseconds());
+            telemetry.addLine("Dump Shared: " + sharedHubModeOn);
             telemetry.update();
         }
 
