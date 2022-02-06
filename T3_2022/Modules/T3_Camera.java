@@ -18,7 +18,7 @@ public class T3_Camera {
     private VuforiaLocalizer vuforia;
     private HardwareMap hardwareMap;
 
-    private int blueThreshold = 70;
+    private int blueThreshold = 100;
     private int redThreshold = 70;
 
     public String outStr = "";
@@ -42,8 +42,8 @@ public class T3_Camera {
         VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
         bm = vuforia.convertFrameToBitmap(closeableFrame);
         if(auto == "redPrimary"){
-            posOne = calculateAverageRGB(bm, 56, 57, 129, 95);
-            posTwo = calculateAverageRGB(bm, 512, 50, 600, 115);
+            posOne = calculateAverageRGB(bm, 113, 76, 136, 90);
+            posTwo = calculateAverageRGB(bm, 512, 69, 600, 120);
             posThree = calculateAverageRGB(bm, 0, 0, 0, 0);
         }else if(auto == "redSecondary"){
             posOne = calculateAverageRGB(bm, 448, 48, 550, 105);
@@ -59,6 +59,7 @@ public class T3_Camera {
             posThree = calculateAverageRGB(bm, 56, 106, 152, 181);
         }
 
+        saveImage();
         if(auto == "redPrimary"){
             if(posOne[3] < blueThreshold){
                 return 0;
@@ -76,9 +77,9 @@ public class T3_Camera {
                 return 2;
             }
         }else if(auto == "redSecondary"){
-            if(posOne[3] < blueThreshold){
+            if(posOne[3] < redThreshold){
                 return 0;
-            }else if(posTwo[3] < blueThreshold){
+            }else if(posTwo[3] < redThreshold){
                 return 1;
             }else{
                 return 2;
@@ -97,7 +98,7 @@ public class T3_Camera {
 
     public void saveImage(){
         try{
-            File outF = AppUtil.getInstance().getSettingsFile("Picture.png");
+            File outF = AppUtil.getInstance().getSettingsFile("Boxes.png");
             FileOutputStream out = new FileOutputStream(outF);
 
             Bitmap bm;
@@ -107,8 +108,8 @@ public class T3_Camera {
             VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
 
             bm = vuforia.convertFrameToBitmap(closeableFrame);
-            drawRectangle(bm, 345, 236, 365, 246);
-            drawRectangle(bm, 345, 280, 365, 300);
+             drawRectangle(bm, 448, 48, 550, 105);
+             drawRectangle(bm, 36, 52, 134, 113);
 
             bm.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.close();

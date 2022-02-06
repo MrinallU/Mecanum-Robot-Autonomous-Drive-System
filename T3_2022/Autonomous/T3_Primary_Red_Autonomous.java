@@ -17,6 +17,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
         T3_Camera camera = new T3_Camera(hardwareMap);
         initOdometry();
 
+        sleep(3000);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
@@ -27,7 +28,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
         pos = camera.readBarcode("redPrimary");
         if(pos == 0){
-            telemetry.addData("Wobble Level: ", "Bottom");
+            telemetry.addData("Wobble Level: ", "TOP");
             telemetry.addData("Shipping Element Placement: ", "☒ ☐ ☐");
             elementDiagram = "☒ ☐ ☐";
             telemetry.update();
@@ -37,7 +38,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
             elementDiagram = "☐ ☒ ☐";
             telemetry.update();
         }else if(pos == 2){
-            telemetry.addData("Wobble Level: ", "Top");
+            telemetry.addData("Wobble Level: ", "Bottom");
             telemetry.addData("Shipping Element Placement: ", "☐ ☐ ☒");
             elementDiagram = "☐ ☐ ☒";
             telemetry.update();
@@ -110,7 +111,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
         sleep(1000);
 
 
-        turnToV2(-180, 4000, this);
+        turnToV2(-175, 4000, this);
         sleep(500);
 
         moveTicksBack(250, 1500, 0.1, 20, this);
@@ -120,7 +121,7 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
         sleep(3000);
         stopCarousel();
 
-        moveTicksFront(700, 4000, 0.3, 20,this);
+        moveTicksFront(800, 4000, 0.3, 20,this);
         sleep(500);
 
         while(opModeIsActive()){
