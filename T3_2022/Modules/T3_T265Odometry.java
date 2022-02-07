@@ -49,38 +49,38 @@ public class T3_T265Odometry {
 
     public void updatePosition() {
         // Get update
-        T265Camera.CameraUpdate rawPose = slamera.getLastReceivedCameraUpdate();
-        Rotation2d rot = rawPose.pose.getRotation();
-        Translation2d translation = new Translation2d(rawPose.pose.getTranslation().getX() / 0.0254,
-                rawPose.pose.getTranslation().getY() / 0.0254);
-
-        // Apply the needed transformations
-        xPos = translation.getX(); yPos = translation.getY(); angle = rot.getRadians();
-        Pose2d currPose = transformBy(startPos); // transform
-        xPos = currPose.getX(); yPos = currPose.getY(); angle = currPose.getHeading();
-        poseConfidence = rawPose.confidence;
-
-        outStr = "xPos: " + format(xPos) + "\nyPos: " + format(yPos) + "\nAngle: " + format((Angle.normalize(Angle.radians_to_degrees(angle))));
+//        T265Camera.CameraUpdate rawPose = slamera.getLastReceivedCameraUpdate();
+//        Rotation2d rot = rawPose.pose.getRotation();
+//        Translation2d translation = new Translation2d(rawPose.pose.getTranslation().getX() / 0.0254,
+//                rawPose.pose.getTranslation().getY() / 0.0254);
+//
+//        // Apply the needed transformations
+//        xPos = translation.getX(); yPos = translation.getY(); angle = rot.getRadians();
+//        Pose2d currPose = transformBy(startPos); // transform
+//        xPos = currPose.getX(); yPos = currPose.getY(); angle = currPose.getHeading();
+//        poseConfidence = rawPose.confidence;
+//
+//        outStr = "xPos: " + format(xPos) + "\nyPos: " + format(yPos) + "\nAngle: " + format((Angle.normalize(Angle.radians_to_degrees(angle))));
     }
 
     public void initializeT265(){
-        Log.d(tag, "Initializing T265");
-        if (slamera == null) {
-            Log.d(tag, "Slamera was null.");
-            slamera = new T265Camera(
-                    new Transform2d(
-                            new Translation2d(startPos.getX(), startPos.getY()),
-                            new Rotation2d(startPos.getHeading())
-                    ),
-                    0,
-                    hardwareMap.appContext
-            );
-        }
-            while (!slamera.isStarted()) {
-                Log.w(tag, "Camera is not ready, starting...");
-                sleep(1000); // replace if needed.
-                slamera.start();
-            }
+//        Log.d(tag, "Initializing T265");
+//        if (slamera == null) {
+//            Log.d(tag, "Slamera was null.");
+//            slamera = new T265Camera(
+//                    new Transform2d(
+//                            new Translation2d(startPos.getX(), startPos.getY()),
+//                            new Rotation2d(startPos.getHeading())
+//                    ),
+//                    0,
+//                    hardwareMap.appContext
+//            );
+//        }
+//            while (!slamera.isStarted()) {
+//                Log.w(tag, "Camera is not ready, starting...");
+//                sleep(1000); // replace if needed.
+//                slamera.start();
+//            }
     }
 
     public void setPose(double x, double y, double angle){

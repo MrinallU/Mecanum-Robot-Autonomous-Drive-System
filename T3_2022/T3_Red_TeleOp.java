@@ -147,7 +147,12 @@ public class T3_Red_TeleOp extends T3_Base {
 
             if(!dPadLeftLast2 && dPadLeft2){
                 posReached = false;
-                arm.sweepPosTeleop();
+                arm.moveTop();
+            }
+
+            if(arm.motor1.retMotorEx().getCurrentPosition() > 950){
+                posReached = true;
+                arm.motor1.useEncoder();
             }
 
 
@@ -166,13 +171,12 @@ public class T3_Red_TeleOp extends T3_Base {
             }else{
                 if(arm.motor1.retMotorEx().getCurrentPosition() < 25) {
                     arm.motor1.setPower(0);
-                    arm.motor1.useEncoder();
                 }else{
                     arm.motor1.setPower(-0.001);
                 }
             }
 
-            if(arm.motor1.retMotorEx().getCurrentPosition() <= 700 && safeftyLock){
+            if(arm.motor1.retMotorEx().getCurrentPosition() <= 700){
                 arm.container.dumpBlock(); // safety
                 toggle1 = 2;
             }

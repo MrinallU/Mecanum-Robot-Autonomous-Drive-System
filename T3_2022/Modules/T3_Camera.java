@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.T3_2022.Modules;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -39,8 +40,13 @@ public class T3_Camera {
         double[] posTwo = new double[4];
         double[] posThree = new double[4];
 
-        VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
-        bm = vuforia.convertFrameToBitmap(closeableFrame);
+        try {
+            VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
+            bm = vuforia.convertFrameToBitmap(closeableFrame);
+        } catch (Exception e){
+            return 1;
+        }
+
         if(auto == "redPrimary"){
             posOne = calculateAverageRGB(bm, 113, 76, 136, 90);
             posTwo = calculateAverageRGB(bm, 512, 69, 600, 120);
@@ -54,16 +60,16 @@ public class T3_Camera {
             posTwo = calculateAverageRGB(bm, 27 , 26, 127, 94);
             posThree = calculateAverageRGB(bm, 0, 0, 0, 0);
         }else if(auto == "blueSecondary"){
-            posOne = calculateAverageRGB(bm, 804, 69, 869, 115);
-            posTwo = calculateAverageRGB(bm, 326, 108, 450, 207);
-            posThree = calculateAverageRGB(bm, 56, 106, 152, 181);
+//            posOne = calculateAverageRGB(bm, 804, 69, 869, 115);
+            posTwo = calculateAverageRGB(bm, 360, 82, 486, 116);
+            posThree = calculateAverageRGB(bm, 76, 81, 187, 125);
         }
 
         saveImage();
         if(auto == "redPrimary"){
-            if(posOne[3] < blueThreshold){
+            if(posOne[3] < redThreshold){
                 return 0;
-            }else if(posTwo[3] < blueThreshold){
+            }else if(posTwo[3] < redThreshold){
                 return 1;
             }else{
                 return 2;
@@ -108,8 +114,8 @@ public class T3_Camera {
             VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
 
             bm = vuforia.convertFrameToBitmap(closeableFrame);
-             drawRectangle(bm, 448, 48, 550, 105);
-             drawRectangle(bm, 36, 52, 134, 113);
+            drawRectangle(bm, 113, 76, 136, 90);
+             drawRectangle(bm, 512, 69, 600, 120);
 
             bm.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.close();

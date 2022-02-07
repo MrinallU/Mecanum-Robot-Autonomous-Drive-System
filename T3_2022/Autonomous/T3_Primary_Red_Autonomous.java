@@ -26,7 +26,12 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
         odometry.updatePosition();
 
-        pos = camera.readBarcode("redPrimary");
+        try {
+            pos = camera.readBarcode("redPrimary");
+        }catch (Exception e){
+            pos = 1;
+        }
+
         if(pos == 0){
             telemetry.addData("Wobble Level: ", "TOP");
             telemetry.addData("Shipping Element Placement: ", "☒ ☐ ☐");
@@ -116,12 +121,13 @@ public class T3_Primary_Red_Autonomous extends T3_Base {
 
         moveTicksBack(250, 1500, 0.1, 20, this);
         sleep(500);
+        moveTicksBack(100, 500, 0.05, 20, this);
 
         startCarousel();
         sleep(3000);
         stopCarousel();
 
-        moveTicksFront(800, 4000, 0.3, 20,this);
+        moveTicksFront(700, 4000, 0.3, 20,this);
         sleep(500);
 
         while(opModeIsActive()){
