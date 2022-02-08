@@ -100,12 +100,9 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
 
         moveTicksBack(1100, 6000, 0.2, 20, this); // @Parth tune this: move to carousel
         sleep(500);
-//
+
 //        moveTicksBack(70, 6000, 0.05, 20, this); // @Parth tune this: move to carousel
 //        sleep(250);
-
-
-
         startBlueCarousel();
         sleep(3000);
         stopCarousel();
