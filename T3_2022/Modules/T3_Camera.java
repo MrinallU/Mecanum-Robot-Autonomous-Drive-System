@@ -5,10 +5,17 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.vuforia.HINT;
+import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
@@ -21,17 +28,31 @@ public class T3_Camera {
 
     private int blueThreshold = 100;
     private int redThreshold = 70;
-
+    private VuforiaTrackables targetsFreightFrenzy;
     public String outStr = "";
-
-
-    // Rings Are YELLOW (255 R and 255 G)
-    // Just look at blue value
 
     public T3_Camera(HardwareMap hardwareMap){
         this.hardwareMap = hardwareMap;
         initVuforia();
     }
+
+    public double [] scanForDuck(){
+            // Look for first visible target, and save its pose.
+            double turnDegrees = Integer.MAX_VALUE;
+            boolean detected = false;
+            for (VuforiaTrackable trackable : targetsFreightFrenzy) {
+                if(trackable.getName() == "Blue Storage") { // change to duck model
+                    OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose();
+                    if (pose != null) {
+                        detected = true;
+                        VectorF targetPose = pose.getTranslation();
+                        turnDegrees = Math.toDegrees(Math.atan2(targetPose.get(1), targetPose.get(2)));
+                    }
+                }
+            }
+          return new double[]{detected ? 1 : 0, turnDegrees}; // todo: transform angle for the sweeper side.
+    }
+
 
     public int readBarcode(String auto) throws InterruptedException{
         int position = 0;
@@ -192,12 +213,19 @@ public class T3_Camera {
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
+        Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
 
         vuforia.setFrameQueueCapacity(1);
 
         vuforia.enableConvertFrameToBitmap();
 
-        // Loading trackables is not necessary for the Tensor Flow Object Detection engine.
+        // Load Trackables
+        targetsFreightFrenzy = this.vuforia.loadTrackablesFromAsset("FreightFrenzy"); // change this
+        targetsFreightFrenzy.activate();
+        targetsFreightFrenzy.get(0).setName("Blue Storage");
+        targetsFreightFrenzy.get(1).setName("Blue Alliance Wall");
+        targetsFreightFrenzy.get(2).setName("Red Storage");
+        targetsFreightFrenzy.get(3).setName("Red Alliance Wall");
     }
 
     public String argbToText(double[] arr){
