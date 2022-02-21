@@ -1,10 +1,10 @@
-package org.firstinspires.ftc.teamcode.T3_2022.Modules;
+package org.firstinspires.ftc.teamcode.State_Championship_2022.Modules;
 
 import org.firstinspires.ftc.teamcode.Utils.Point;
 
 // Formulas & Logic Reference: https://www.youtube.com/watch?v=XbXhA4k7Ur8
 
-public class T3_DifferentialDriveOdometry {
+public class DifferentialDriveOdometry {
     private final double WHEEL_RADIUS = 2; // WHEEL_RADIUS
     private final double TICKS_PER_REV = 538; // calibrate
 
@@ -12,7 +12,7 @@ public class T3_DifferentialDriveOdometry {
     private double prevL = 0, prevR = 0;
     private String outStr;
 
-    public T3_DifferentialDriveOdometry(int x, int y, int theta){
+    public DifferentialDriveOdometry(int x, int y, int theta){
             this.x = x;
             this.y  = y;
             this.theta = theta;

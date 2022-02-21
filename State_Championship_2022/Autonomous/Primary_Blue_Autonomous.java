@@ -1,12 +1,12 @@
-package org.firstinspires.ftc.teamcode.T3_2022.Autonomous;
+package org.firstinspires.ftc.teamcode.State_Championship_2022.Autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import org.firstinspires.ftc.teamcode.T3_2022.Modules.T3_Camera;
-import org.firstinspires.ftc.teamcode.T3_2022.T3_Base;
+import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.Camera;
+import org.firstinspires.ftc.teamcode.State_Championship_2022.Base;
 
-@Autonomous(name="T3_Primary_Blue_Autonomous", group = "Autonomous")
-public class T3_Primary_Blue_Autonomous extends T3_Base {
+@Autonomous(name="Primary_Blue_Autonomous", group = "Autonomous")
+public class Primary_Blue_Autonomous extends Base {
     int pos = 0;
     String elementDiagram = "";
     int bottomOffset = 0;
@@ -15,16 +15,13 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
     public void runOpMode() throws InterruptedException {
         init(0);
         initServosAuto();
-        T3_Camera camera = new T3_Camera(hardwareMap);
+        Camera camera = new Camera(hardwareMap);
         initOdometry();
         sleep(1000);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
-
-
-        odometry.updatePosition();
 
         pos = camera.readBarcode("bluePrimary");
         if (pos == 0) {
@@ -48,7 +45,6 @@ public class T3_Primary_Blue_Autonomous extends T3_Base {
 
         telemetry.addData("Shipping Element Placement: ", elementDiagram);
         telemetry.addLine("Ang: " + getAngle());
-        telemetry.addLine("Pos: " + odometry.outStr);
         telemetry.update();
 
         moveTicksBack(450, 4000, 0.4, 20, this);

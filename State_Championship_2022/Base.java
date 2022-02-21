@@ -1,76 +1,99 @@
+
 package org.firstinspires.ftc.teamcode.State_Championship_2022;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.Container;
+import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.DifferentialDriveOdometry;
+import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.Intake;
+import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.Outtake;
+import org.firstinspires.ftc.teamcode.Utils.Angle;
 import org.firstinspires.ftc.teamcode.Utils.Motor;
 import org.firstinspires.ftc.teamcode.Utils.Point;
-import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Mecanum;
+import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Tank;
+import org.firstinspires.ftc.teamcode.Utils.SplineGenerator;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 public abstract class Base extends LinearOpMode {
-    // Lynx Modules
     List<LynxModule> allHubs;
+    public Motor  leftDrive   = null;
+    public Motor  rightDrive  = null;
+    public Motor  backleftDrive   = null;
+    public Motor  backrightDrive  = null;
+    public Motor carousel = null;
+    Servo frontBlocker, sideBlocker;
+    public BNO055IMU imu;
+    private Orientation lastAngles = new Orientation();
+    double currAngle = 0;
+    public Intake sweeper = null;
+    public Outtake arm = null;
+    public Container container;
 
-    // Motors
-    protected Motor fLeftMotor, bLeftMotor, fRightMotor, bRightMotor;
+    public DifferentialDriveOdometry wheelOdometry;
+    public static Tank driveTrain;
+    public static final double carouselPow = 0.4;
 
-    // Servos
-
-    // Servo Positions
-
-
-    // Testing Mode
-    boolean testing = false;
-
-    // Sleep Times
+    /* local OpMode members. */
     ElapsedTime matchTime = new ElapsedTime();
-    ElapsedTime pollTime, cTime;
-    int testingSleep = 200, normalSleep = 10;
 
-    // Gyro and Angles
-    public BNO055IMU gyro;
-    double startAngle;
+    // Normal moveToPosition PID Coefficients
+    private final double k_p = 0.01;
+    private final double k_d = 0.003;
+    private final double k_i = 0;
+    private final double max_i = 0.01;
+    private double initAngle;
+    private SplineGenerator splineGenerator = new SplineGenerator();
 
-    // Constants and Conversions
-
-    // Other
-    boolean isRunning;
-
-    //Modules
-    Mecanum driveTrain;
-
-    public void initHardware(int type){
-        // Setting up Hubs (Manual Caching)
+    /* Initialize standard Hardware interfaces */
+    public void init(int matchType, boolean useRR) {
+        // Save reference to Hardware map
         allHubs = hardwareMap.getAll(LynxModule.class);
 
         for(LynxModule hub : allHubs){
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+            if(useRR){
+                hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+            }else{
+                hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+            }
         }
 
-        //  Motor
-        fLeftMotor = new Motor(hardwareMap, "fLeft");
-        bLeftMotor = new Motor(hardwareMap, "bLeft");
-        fRightMotor = new Motor(hardwareMap, "fRight");
-        bRightMotor = new Motor(hardwareMap, "bRight");
+        // Motors
+        if(!useRR) {
+            leftDrive = new Motor(hardwareMap, "fLeft");
+            rightDrive = new Motor(hardwareMap, "fRight");
+            backleftDrive = new Motor(hardwareMap, "bLeft");
+            backrightDrive = new Motor(hardwareMap, "bRight");
+        }
+        carousel = new Motor(hardwareMap, "carousel");
 
+        if(useRR)
+            driveTrain = new Tank(hardwareMap);
         // Servos
+        frontBlocker = hardwareMap.servo.get("frontBlocker");
+        sideBlocker = hardwareMap.servo.get("sideBlocker");
 
-        // Misc
-        isRunning = true;
+        //Modules
+        container = new Container(frontBlocker, sideBlocker);
+        arm = new Outtake(new Motor(hardwareMap, "arm", true), container, this,5.0);
+        sweeper = new Intake(new Motor(hardwareMap,  "sweeper"));
 
-        //Gyro
+        //IMU
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -79,153 +102,50 @@ public abstract class Base extends LinearOpMode {
         parameters.loggingTag          = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-        gyro = hardwareMap.get(BNO055IMU.class, "imu");
-        gyro.initialize(parameters);
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
 
-        driveTrain = new Mecanum(hardwareMap);
+        // Start Motors
+        if(!useRR) {
+            leftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
+            rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors'
+            backrightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+            backleftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
+        }
+
+        stopBot();
+
+        initServos();
+
+        // Odometry
+        resetAngle();
+        if(matchType == 1){
+            initAngle = -179;
+            currAngle = -179;
+            wheelOdometry = new DifferentialDriveOdometry(0, 0, -179);
+        }
+        else{
+            initAngle = 0;
+            currAngle = 0;
+            wheelOdometry = new DifferentialDriveOdometry(0, 0, 0);
+        }
+    }
+
+    public void init(int matchType){
+        init(matchType, false);
     }
 
     public void initServos(){
+        container.init();
+    }
+    public void initServosAuto(){
+        container.initAuto();
+    }
+
+    public void initOdometry() {
 
     }
 
-    public String formatDegrees(double degrees){
-        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
-    }
-
-    public String formatAngle(AngleUnit angleUnit, double angle) {
-        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
-    }
-
-    public double getAngle(){
-        Orientation angles = gyro.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES); //ZYX is Original
-        return angles.firstAngle;
-    }
-
-    // MULTI-USE FUNCTIONS
-    public void driveFieldCentric(double baseAngle, double drive, double turn, double strafe){
-        double fRightPow, bRightPow, fLeftPow, bLeftPow;
-
-        double bLeftAngle = Math.toRadians(baseAngle + 135);
-        double fLeftAngle = Math.toRadians(baseAngle + 45);
-        double bRightAngle = Math.toRadians(baseAngle + 225);
-        double fRightAngle = Math.toRadians(baseAngle + 315);
-
-        fRightPow = (drive * Math.sin(fRightAngle) + strafe * Math.cos(fRightAngle)) / Math.sqrt(1) + turn;
-        bRightPow = (drive * Math.sin(bRightAngle) + strafe * Math.cos(bRightAngle)) / Math.sqrt(1) + turn;
-        fLeftPow = (drive * Math.sin(fLeftAngle) + strafe * Math.cos(fLeftAngle)) / Math.sqrt(1) + turn;
-        bLeftPow = (drive * Math.sin(bLeftAngle) + strafe * Math.cos(bLeftAngle)) / Math.sqrt(1) + turn;
-
-        double[] calculatedPower = scalePowers(bLeftPow, fLeftPow, bRightPow, fRightPow);
-        fLeftPow = calculatedPower[0];
-        bLeftPow = calculatedPower[1];
-        fRightPow = calculatedPower[2];
-        bRightPow = calculatedPower[3];
-
-        setDrivePowers(bLeftPow, fLeftPow, bRightPow, fRightPow);
-    }
-
-    public void driveRobotCentric(double drive, double turn, double strafe){
-        double fRightPow = 0, bRightPow = 0, fLeftPow = 0, bLeftPow = 0;
-
-        fLeftPow = -drive + turn - strafe;
-        bLeftPow = -drive + turn + strafe;
-        fRightPow = drive + turn - strafe;
-        bRightPow = drive + turn + strafe;
-
-        double[] calculatedPower = scalePowers(bLeftPow, fLeftPow, bRightPow, fRightPow);
-        fLeftPow = calculatedPower[0];
-        bLeftPow = calculatedPower[1];
-        fRightPow = calculatedPower[2];
-        bRightPow = calculatedPower[3];
-
-        setDrivePowers(bLeftPow, fLeftPow, bRightPow,fRightPow);
-    }
-
-    public double[] scalePowers (double bLeftPow, double fLeftPow, double bRightPow, double fRightPow){
-        double maxPow = Math.max(Math.max(Math.abs(fLeftPow), Math.abs(bLeftPow)), Math.max(Math.abs(fRightPow), Math.abs(bRightPow)));
-        if (maxPow > 1) {
-            fLeftPow /= maxPow;
-            bLeftPow /= maxPow;
-            fRightPow /= maxPow;
-            bRightPow /= maxPow;
-        }
-
-        return new double[] {fLeftPow, bLeftPow, fRightPow, bRightPow};
-    }
-
-    public void setDrivePowers(double bLeftPow, double fLeftPow, double bRightPow, double fRightPow){
-        bLeftMotor.setPower(bLeftPow);
-        fLeftMotor.setPower(fLeftPow);
-        bRightMotor.setPower(bRightPow);
-        fRightMotor.setPower(fRightPow);
-    }
-
-    // AUTONOMOUS/TESTING FUNCTIONS
-    public void rest(){
-        rest(testing ? testingSleep : normalSleep);
-    }
-
-    public void rest(int time){
-        try {
-            Thread.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void turnTo(double targetAngle){
-        driveTrain.turn(targetAngle);
-    }
-
-    // ODOMETRY FUNCTIONS
-    private final double distanceToPowerScale = 0.03;
-    private final double angleToPowerScale = 0.01;
-
-
-
-    private final double max_i = 0.01;
-
-    // Spline PID Coefficients
-    private final double k_p_s = 0.075;
-    private final double k_d_s = 0;
-    private final double k_i_s = 0;
-
-    // Normal moveToPosition PID Coefficients
-    private final double k_p = 0.055;
-    private final double k_d = 0;
-    private final double k_i = 0;
-
-    public Trajectory moveToPosition(double targetXPos, double targetYPos, double targetAngle){
-        Pose2d start = driveTrain.getPoseEstimate();
-        Trajectory traj = driveTrain.trajectoryBuilder(start)
-                .lineToSplineHeading(new Pose2d(targetXPos, targetYPos, Math.toRadians(targetAngle)))
-                .build();
-        driveTrain.followTrajectory(traj);
-        return traj;
-    }
-
-    public void splineTo(Point [] wp){
-        Pose2d currP = driveTrain.getPoseEstimate();
-        for (Point p: wp
-             ) {
-            Trajectory traj = driveTrain.trajectoryBuilder(currP)
-                    .lineToSplineHeading(new Pose2d(p.xP, p.xP, Math.toRadians(p.ang)))
-                    .build();
-            driveTrain.followTrajectory(traj);
-            currP = traj.end();
-        }
-    }
-
-    public double distanceToPower(double dist) {
-        return dist * distanceToPowerScale;
-    }
-
-    public double angleToPower(double angle) {
-        return angle * angleToPowerScale;
-    }
-
-    // BULK-READING FUNCTIONS
     public void resetCache(){
         // Clears cache of all hubs
         for(LynxModule hub : allHubs){
@@ -233,13 +153,393 @@ public abstract class Base extends LinearOpMode {
         }
     }
 
+    private void stopBot() {
+        leftDrive.setPower(0);
+        rightDrive.setPower(0);
+        backleftDrive.setPower(0);
+        backrightDrive.setPower(0);
+    }
 
-    // Other Functions
-    public double normalizeThreeDigits(double d){
-        return (int)(d * 1000) / 1000.;
+    private void setDrivePowers(double v, double motorPower, double v1, double motorPower1) {
+        leftDrive.setPower(v);
+        backleftDrive.setPower(v1);
+        rightDrive.setPower(motorPower);
+        backrightDrive.setPower(motorPower1);
+    }
+
+    public void resetAngle() {
+        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        currAngle = 0;
+    }
+
+    public double getRelativeAngle() {
+
+        // Get current orientation
+        Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        // Change in angle = current angle - previous angle
+        double deltaAngle = orientation.firstAngle - lastAngles.firstAngle;
+        if (deltaAngle < -180) {
+            deltaAngle += 360;
+        } else if (deltaAngle > 180) {
+            deltaAngle -= 360;
+        }
+
+        // Add change in angle to current angle to get current angle
+        currAngle += deltaAngle;
+        lastAngles = orientation;
+        return currAngle;
+    }
+
+    public double getAngle() {
+        return imu.getAngularOrientation(
+                AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES
+        ).firstAngle + initAngle;
+    }
+
+    // my imu based turnTo
+    public void turnToV2(double targetAngle, double timeout, double powerCap, LinearOpMode opMode)  {
+        double angleDiff = 100, currTime = 0;
+        double prevAngleDiff = 100;
+        double dAng, iAng = 0;
+
+        ElapsedTime time = new ElapsedTime(), cycleTime = new ElapsedTime();
+        double prevTime = 0;
+
+        while (time.milliseconds() < timeout && Math.abs(targetAngle - getAngle()) > 1 && opMode.opModeIsActive())  {
+            cycleTime.reset();
+            resetCache();
+            // update odometry convert tick velocity to inch velocity
+            wheelOdometry.updatePosition(
+                    leftDrive.encoderReading(),
+                    rightDrive.encoderReading(),
+                    getAngle());
+
+
+            currTime = time.milliseconds() + 0.00001; // avoids divide by 0 error
+
+            // error from input
+            angleDiff = Angle.angleDifference(getAngle(), targetAngle);
+
+            // 0.1 = f, tanh = makes the values approach 1 to -1
+            double power = Math.tanh(k_p * angleDiff);
+
+            setDrivePowers(-power, power, -power, power);
+            telemetry.addLine(wheelOdometry.displayPositions());
+            telemetry.update();
+
+            // Teleop Breakout
+            if(gamepad1.a && gamepad2.a){
+                break;
+            }
+        }
+        // stop when pos is reached
+        stopBot();
+    }
+
+    public void turnToV2(double targetAngle, double timeout, LinearOpMode opMode){ turnToV2(targetAngle, timeout, 1, opMode); }
+
+    public boolean xTo(double targetX, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate, boolean useCam){
+        double currX = wheelOdometry.getX(); // replace as needed
+        ElapsedTime time = new ElapsedTime();
+        double prevError = 0;
+        double prevTime = 0;
+        double currTime = 0;
+        while(Math.abs(currX - targetX) > minDifference && time.milliseconds() < timeout && opMode.opModeIsActive()){
+            resetCache();
+            // update odometry convert tick velocity to inch velocity
+            currTime = time.milliseconds();
+            wheelOdometry.updatePosition(
+                    leftDrive.encoderReading(),
+                    rightDrive.encoderReading(),
+                    getAngle());
+
+
+            if(!useCam)
+                currX = wheelOdometry.getX();
+
+            double xDiff = currX - targetX;
+            double d = k_d * (xDiff - prevError) / (currTime - prevTime);
+
+
+            // front is negative
+            // back positive
+            // 2 - 0 = 2 but cam is front so negate to go back to zero
+            /*
+            Back robot is not negated
+            Front cam is negated
+            Left cam is not negated
+            Right cam is negated
+             */
+
+            double drive = Range.clip((xDiff * 0.055)+d, -powerCap, powerCap);
+            if(negate) {
+                drive *= -1;
+            }
+
+            setDrivePowers(drive, drive, drive, drive);
+            prevError = xDiff;
+            prevTime = currTime;
+
+            telemetry.addLine(wheelOdometry.displayPositions());
+            telemetry.update();
+        }
+        boolean works =  time.milliseconds() < timeout;
+        stopBot();
+        // works
+        return works;
+    }
+
+    public boolean yTo(double targetY, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate, boolean useCam){
+        double Y = wheelOdometry.getY(); // replace as needed
+        ElapsedTime time = new ElapsedTime();
+        double prevError = 0;
+        double prevTime = 0;
+        double currTime = 0;
+        while(Math.abs(Y - targetY) > minDifference && time.milliseconds() < timeout && opMode.opModeIsActive()){
+            resetCache();
+            // update odometry convert tick velocity to inch velocity
+            currTime = time.milliseconds();
+            wheelOdometry.updatePosition(
+                    leftDrive.encoderReading(),
+                    rightDrive.encoderReading(),
+                    getAngle());
+
+
+            if(!useCam)
+                Y = wheelOdometry.getY();
+
+            double yDiff = targetY - Y;
+            double d =  k_d * (yDiff - prevError) / (currTime - prevTime);
+            double drive = Range.clip((yDiff * 0.055)+d, -powerCap, powerCap) * -1;
+
+            if(negate){
+                drive *= -1;
+            }
+            // Combine drive and turn for blended motion.
+
+            // Output the safe vales to the motor drives.
+            leftDrive.setPower(drive);
+            rightDrive.setPower(drive);
+            backleftDrive.setPower(drive);
+            backrightDrive.setPower(drive);
+
+            prevError = yDiff;
+            prevTime = currTime;
+
+            telemetry.addLine(wheelOdometry.displayPositions());
+            telemetry.addData("Diff ", yDiff);
+            telemetry.update();
+        }
+        boolean works =  time.milliseconds() < timeout;
+        stopBot();
+        // works
+        return works;
+
+    }
+
+    public boolean xTo(double targetX, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate){
+        return xTo( targetX,  timeout,  powerCap,  minDifference,  opMode,  negate, false);
+    }
+
+    public boolean yTo(double targetY, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate){
+        return yTo( targetY,  timeout,  powerCap,  minDifference,  opMode,  negate, false);
+    }
+
+    // tick diff should be no less than 22!
+    // tick per in is 44.8
+    public void moveTicks(double ticksMoved, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate){
+        // update odometry convert tick velocity to inch velocity
+        wheelOdometry.updatePosition(
+                leftDrive.encoderReading(),
+                rightDrive.encoderReading(),
+                getAngle());
+
+        double currTicks = leftDrive.encoderReading(); // todo: average all the values?? (further research required)
+        double destTick;
+        double prevError = 0;
+        double prevTime = 0;
+        double currTime = 0;
+        ElapsedTime time = new ElapsedTime();
+
+        if(negate) {
+             destTick = currTicks - ticksMoved;
+        }else{
+             destTick = currTicks + ticksMoved;
+        }
+
+        telemetry.addLine("pos " + leftDrive.encoderReading() + " " + (destTick));
+        telemetry.update();
+
+        while(Math.abs(currTicks - (destTick)) > minDifference && time.milliseconds() < timeout && opMode.opModeIsActive()){
+            resetCache();
+            // update odometry convert tick velocity to inch velocity
+            currTime = time.milliseconds();
+            wheelOdometry.updatePosition(
+                    leftDrive.encoderReading(),
+                    rightDrive.encoderReading(),
+                    getAngle());
+
+            currTicks = leftDrive.encoderReading();
+
+            double tickDiff = destTick - currTicks;
+            double d = k_d * (tickDiff - prevError) / (currTime - prevTime);
+            double drive = Range.clip((tickDiff * 0.055)+d, -powerCap, powerCap); // p-controller
+
+            setDrivePowers(drive, drive, drive, drive);
+
+            prevError = tickDiff;
+            prevTime = currTime;
+
+            telemetry.addLine(wheelOdometry.displayPositions());
+            telemetry.update();
+        }
+        stopBot();
+    }
+
+    public void moveTicksFront(double ticksMoved, double timeout, double powerCap, double minDifference, LinearOpMode opMode){
+        moveTicks(ticksMoved, timeout, powerCap, minDifference, opMode, false);
+    }
+
+    public void moveTicksBack(double ticksMoved, double timeout, double powerCap, double minDifference, LinearOpMode opMode){
+        moveTicks(ticksMoved, timeout, powerCap, minDifference, opMode, true);
+    }
+
+    public double getAutoAimAngle(Point p){
+        return 0;
+    }
+
+    // For now splines are processed in terms of increasing x, so knot splines are not possible
+    // todo add a d-component to the spline
+    public void traverseSpline(Point [] pts, double driveSpeedCap, double xError, int lookAheadDist, boolean reverse, boolean reverseAngle) {
+        pts[0] = new Point(wheelOdometry.getX(), wheelOdometry.getY());
+        Arrays.sort(pts);
+        ArrayList<Point> wp = splineGenerator.generateSplinePath(pts, lookAheadDist); // get weighpoints
+        sleep(500);
+        // back to front
+        if(reverse) {
+            Collections.reverse(wp);
+        }
+
+        while (Math.abs(wheelOdometry.getX() - pts[pts.length - 1].xP) > xError) {
+            resetCache();
+            // update localizer
+            wheelOdometry.updatePosition(
+                    leftDrive.encoderReading(),
+                    rightDrive.encoderReading(),
+                    getAngle());
+
+            // find point which fits the look ahead criteria
+            Point nxtP = null;
+            double fitDist = Double.MAX_VALUE;
+            for (Point p : wp
+            ) {
+                double ptDist = wheelOdometry.getPose().getDistance(p);
+
+                if (wheelOdometry.getX() < p.xP && !reverse) {
+                    if (ptDist < fitDist) {
+                        fitDist = ptDist;
+                        nxtP = p;
+                    }
+                }else if(wheelOdometry.getX() > p.xP){
+                    if (ptDist < fitDist) {
+                        fitDist = ptDist;
+                        nxtP = p;
+                    }
+                }
+            }
+
+            if (nxtP == null) {
+                stopBot();
+                sleep(500);
+                break;
+            }
+
+            // assign powers to follow the look-ahead point
+            double yDiff = nxtP.yP - wheelOdometry.getY();
+            double xDiff = nxtP.xP - wheelOdometry.getX();
+            double angDiff = Angle.angleDifference( Angle.normalize(getAngle()) , // get steering angle
+                    Angle.normalize( Math.toDegrees(
+                            Math.atan2(yDiff, xDiff)
+                            )
+                    ));
+
+            if(reverseAngle)
+                angDiff = Angle.normalize(angDiff + 180);
+
+            // P-Control for drive and turn
+            if(Math.abs(angDiff) < 2)
+                angDiff = 0;
+
+            double turnSpeed = angDiff * 0.01; // Basic P-Control
+            double driveSpeed = Range.clip((pts[pts.length - 1].xP - wheelOdometry.getX() * 0.055),
+                    -driveSpeedCap, driveSpeedCap);
+
+            setDrivePowers(driveSpeed - turnSpeed,
+                    driveSpeed + turnSpeed,
+                    driveSpeed - turnSpeed,
+                    driveSpeed + turnSpeed);
+
+            telemetry.addLine(wheelOdometry.displayPositions());
+            telemetry.update();
+        }
+        stopBot();
+    }
+
+    public void traverseSpline(Point [] pts, double driveSpeedCap, double xError, int lookAheadDist, boolean reverse){
+        traverseSpline(pts, driveSpeedCap, xError, lookAheadDist, reverse, false);
+    }
+
+
+
+
+    public void autoAimToWobble(String opMode){
+        double targetAng;
+
+        if(opMode.equals("redPrimary"))
+            targetAng = getAutoAimAngle(new Point(0, 1));
+        else if(opMode.equals("redSecondary"))
+            targetAng = getAutoAimAngle(new Point(0, 1));
+        else if(opMode.equals("bluePrimary"))
+            targetAng = getAutoAimAngle(new Point(0, 1));
+        else
+            targetAng = getAutoAimAngle(new Point(0, 1));
+
+        turnToV2(targetAng, 6000, this);
+    }
+
+
+    public void startCarousel(){
+        carousel.setPower(1);
+    }
+
+    // gradual carousel acceleration
+    public void startCarousel(double time){
+//        carousel.setPower(time * 0.0004);
+        if(time <= 1000){
+            carousel.setPower(0.2);
+            return;
+        }
+        carousel.setPower((1));
+    }
+
+    public void startCarouselBlue(double time){
+//        carousel.setPower(time * 0.0004);
+        if(time <= 1000){
+            carousel.setPower(-0.2);
+            return;
+        }
+        carousel.setPower((-1));
+    }
+
+    public void startBlueCarousel(){
+        carousel.setPower(-1);
+    }
+    public void stopCarousel(){
+        carousel.setPower(0);
     }
 
     @Override
     public abstract void runOpMode() throws InterruptedException;
-
 }
+

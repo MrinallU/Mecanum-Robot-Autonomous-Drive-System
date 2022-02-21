@@ -1,13 +1,13 @@
-package org.firstinspires.ftc.teamcode.T3_2022.Modules;
+package org.firstinspires.ftc.teamcode.State_Championship_2022.Modules;
 
 import org.firstinspires.ftc.teamcode.Utils.Motor;
 
-public class T3_Intake {
+public class Intake {
     Motor sweeper;
 
     double sweepPower = -0.5;
 
-    public T3_Intake(Motor sweeper){
+    public Intake(Motor sweeper){
         this.sweeper = sweeper;
         setSweepPID();
     }

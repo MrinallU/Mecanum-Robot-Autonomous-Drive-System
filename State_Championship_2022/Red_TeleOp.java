@@ -1,11 +1,10 @@
-package org.firstinspires.ftc.teamcode.T3_2022;
+package org.firstinspires.ftc.teamcode.State_Championship_2022;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-// todo: remove t265 in teleop
-@TeleOp(name="T3-Blue-TeleOp", group="T3")
-public class T3_Blue_TeleOp extends T3_Base {
+@TeleOp(name="Red-TeleOp", group="T3")
+public class Red_TeleOp extends Base {
     boolean carouselIsOn = false;
     boolean sweeperIsOn = false;
     boolean armIsOn = false;
@@ -31,14 +30,16 @@ public class T3_Blue_TeleOp extends T3_Base {
     boolean b2P = false;
     boolean slowToggle = true;
     boolean safeftyLock = true;
+    boolean posReached = true;
+    double armPower = 0.4;
     boolean switchArmPowerCurr, switchArmPowerLast;
     boolean sharedHubMode = false;
-
+    boolean switchSideOpenLast = false, switchSideOpenCurr = false;
+    boolean sharedHubModeOn = false;
     int toggle1 = 1;
     int toggle2 = 1;
-    int toggle3 = 1;
-    ElapsedTime carouselTime = new ElapsedTime();
 
+    ElapsedTime carouselTime = new ElapsedTime();
     @Override
     public void runOpMode() {
         double left;
@@ -125,6 +126,7 @@ public class T3_Blue_TeleOp extends T3_Base {
 
 
             // arm
+
             switchArmPowerLast = switchArmPowerCurr;
             switchArmPowerCurr = gamepad2.b;
 
@@ -144,8 +146,13 @@ public class T3_Blue_TeleOp extends T3_Base {
             dPadLeft2 = gamepad2.dpad_left;
 
             if(!dPadLeftLast2 && dPadLeft2){
+                posReached = false;
+                arm.moveTop();
+            }
 
-                arm.sweepPosTeleop();
+            if(arm.motor1.retMotorEx().getCurrentPosition() > 950){
+                posReached = true;
+                arm.motor1.useEncoder();
             }
 
 
@@ -164,13 +171,12 @@ public class T3_Blue_TeleOp extends T3_Base {
             }else{
                 if(arm.motor1.retMotorEx().getCurrentPosition() < 25) {
                     arm.motor1.setPower(0);
-                    arm.motor1.useEncoder();
                 }else{
                     arm.motor1.setPower(-0.001);
                 }
             }
 
-            if(arm.motor1.retMotorEx().getCurrentPosition() <= 700 && safeftyLock){
+            if(arm.motor1.retMotorEx().getCurrentPosition() <= 700){
                 arm.container.dumpBlock(); // safety
                 toggle1 = 2;
             }
@@ -207,7 +213,7 @@ public class T3_Blue_TeleOp extends T3_Base {
 
 
             if(gamepad1.y){
-                startCarouselBlue(carouselTime.milliseconds());
+                startCarousel(carouselTime.milliseconds());
             }else{
                 stopCarousel();
                 carouselTime.reset();
@@ -216,13 +222,14 @@ public class T3_Blue_TeleOp extends T3_Base {
 
 
 
+
             // Send telemetry message to signify robot running;
 
             telemetry.addLine("Arm Safety Status: "  + safeftyLock);
             telemetry.addLine("odo pos " + wheelOdometry.displayPositions());
-            telemetry.addLine("cam pos " + odometry.displayPositions());
-            telemetry.addLine("cTime " + carouselTime.milliseconds());
             telemetry.addLine("imu angle " + getRelativeAngle());
+            telemetry.addLine("cTime " + carouselTime.milliseconds());
+            telemetry.addLine("Dump Shared: " + sharedHubModeOn);
             telemetry.update();
         }
 

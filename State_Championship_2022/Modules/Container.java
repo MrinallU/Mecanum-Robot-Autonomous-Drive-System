@@ -1,12 +1,12 @@
-package org.firstinspires.ftc.teamcode.T3_2022.Modules;
+package org.firstinspires.ftc.teamcode.State_Championship_2022.Modules;
 
 import com.qualcomm.robotcore.hardware.Servo;
 
-public class T3_Container {
+public class Container {
     Servo frontBlocker, sideBlocker;
     double frontBlockPos = 0.20, sideBlockPos = 0.3, frontReleasePos = 1, sideReleasePos = 0.7, sideSharedHubOpen = 0;
     
-    public T3_Container(Servo frontBlocker, Servo sideBlocker){
+    public Container(Servo frontBlocker, Servo sideBlocker){
         this.frontBlocker = frontBlocker;
         this.sideBlocker = sideBlocker;
     }

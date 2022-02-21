@@ -1,15 +1,15 @@
-package org.firstinspires.ftc.teamcode.T3_2022.Modules;
+package org.firstinspires.ftc.teamcode.State_Championship_2022.Modules;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Utils.Motor;
 
-public class T3_Outtake {
+public class Outtake {
     public Motor motor1;
-    public T3_Container container;
+    public Container container;
     LinearOpMode opMode;
 
-    public T3_Outtake(Motor motor1, T3_Container container, LinearOpMode opmode, double p){
+    public Outtake(Motor motor1, Container container, LinearOpMode opmode, double p){
         this.motor1 = motor1;
         this.container = container;
         this.opMode = opmode;

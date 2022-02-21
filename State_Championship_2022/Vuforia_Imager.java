@@ -1,12 +1,11 @@
-package org.firstinspires.ftc.teamcode.T3_2022;
+package org.firstinspires.ftc.teamcode.State_Championship_2022;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.T3_2022.Modules.T3_Camera;
+import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.Camera;
 
-@TeleOp(name="Vuforia-Imager-T3", group="T3")
-public class Vuforia_Imager extends T3_Base {
+@TeleOp(name="Vuforia-Imager", group="T3")
+public class Vuforia_Imager extends Base {
     boolean x2P;
     boolean xL2P;
     int imgId = 1;
@@ -15,7 +14,7 @@ public class Vuforia_Imager extends T3_Base {
     public void runOpMode() {
 
         init(0);
-        T3_Camera camera = new T3_Camera(hardwareMap);
+        Camera camera = new Camera(hardwareMap);
         initServos();
         sleep(2000);
 

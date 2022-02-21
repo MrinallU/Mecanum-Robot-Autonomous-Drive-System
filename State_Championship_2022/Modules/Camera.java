@@ -1,7 +1,6 @@
-package org.firstinspires.ftc.teamcode.T3_2022.Modules;
+package org.firstinspires.ftc.teamcode.State_Championship_2022.Modules;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -21,7 +20,7 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import java.io.File;
 import java.io.FileOutputStream;
 
-public class T3_Camera {
+public class Camera {
     private static final String VUFORIA_KEY = "AWnPBRj/////AAABmaYDUsaxX0BJg7/6QOpapAl4Xf18gqNd7L9nALxMG8K2AF6lodTZQ78nnksFc2CMy/3KmeolDEFGmp0CQJ7c/5PKymmJYckCfsg16B6Vnw5OihuD2mE7Ky0tT1VGdit2KvolunYkjWKDiJpX15SFMX//Jclt+Xt8riZqh3edXpUdREIXxS9tmdF/O6Nc5mUI7FEfAJHq4xUaqSY/yta/38qirjy3tdqFjDGc9g4DmgPE6+6dGLiXeUJYu32AgoefA1iFRF+ZVNJEc1j4oyw3JYQgWwfziqyAyPU2t9k9UDgqEkyxGxl4xS70KN/SBEUZeq4CzYfyon2kSSvKK/6/Vt4maMzG3LXfLt0PMiEPI1z+";
     private VuforiaLocalizer vuforia;
     private HardwareMap hardwareMap;
@@ -31,26 +30,9 @@ public class T3_Camera {
     private VuforiaTrackables targetsFreightFrenzy;
     public String outStr = "";
 
-    public T3_Camera(HardwareMap hardwareMap){
+    public Camera(HardwareMap hardwareMap){
         this.hardwareMap = hardwareMap;
         initVuforia();
-    }
-
-    public double [] scanForDuck(){
-            // Look for first visible target, and save its pose.
-            double turnDegrees = Integer.MAX_VALUE;
-            boolean detected = false;
-            for (VuforiaTrackable trackable : targetsFreightFrenzy) {
-                if(trackable.getName() == "Blue Storage") { // change to duck model
-                    OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose();
-                    if (pose != null) {
-                        detected = true;
-                        VectorF targetPose = pose.getTranslation();
-                        turnDegrees = Math.toDegrees(Math.atan2(targetPose.get(1), targetPose.get(2)));
-                    }
-                }
-            }
-          return new double[]{detected ? 1 : 0, turnDegrees}; // todo: transform angle for the sweeper side.
     }
 
 

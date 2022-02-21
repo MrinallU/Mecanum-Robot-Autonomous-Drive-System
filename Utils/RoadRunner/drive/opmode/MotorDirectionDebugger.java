@@ -39,7 +39,7 @@ import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Tank;
  *
  * Uncomment the @Disabled tag below to use this opmode.
  */
-
+@Disabled
 @Config
 @TeleOp(group = "drive")
 public class MotorDirectionDebugger extends LinearOpMode {

@@ -1,13 +1,11 @@
-package org.firstinspires.ftc.teamcode.T3_2022;
+package org.firstinspires.ftc.teamcode.State_Championship_2022;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.T3_2022.Modules.T3_Camera;
-
 // todo: remove t265 in teleop
-@TeleOp(name="DuckAimTest", group="T3")
-public class DuckAimTest extends T3_Base {
+@TeleOp(name="Blue-TeleOp", group="T3")
+public class Blue_TeleOp extends Base {
     boolean carouselIsOn = false;
     boolean sweeperIsOn = false;
     boolean armIsOn = false;
@@ -54,7 +52,8 @@ public class DuckAimTest extends T3_Base {
 
         init(0);
         initServos();
-        T3_Camera camera = new T3_Camera(hardwareMap);
+//        initOdometry();
+        sleep(2000);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -72,7 +71,58 @@ public class DuckAimTest extends T3_Base {
                     leftDrive.encoderReading(),
                     rightDrive.encoderReading(),
                     getAngle());
-            double [] status = camera.scanForDuck();
+
+            drive = -gamepad1.left_stick_y;
+            turn  =  gamepad1.right_stick_x;
+
+            // Combine drive and turn for blended motion.
+            left  = drive + turn;
+            right = drive - turn;
+
+            max = Math.max(Math.abs(left), Math.abs(right));
+            if (max > 1.0)
+            {
+                left /= max;
+                right /= max;
+            }
+
+            aLP = aP;
+            aP = gamepad1.a;
+            if(aP && !aLP){
+                powerMult = slowToggle ? 0.3 : 1;
+                slowToggle = !slowToggle;
+            }
+
+            left *= powerMult;
+            right *= powerMult;
+
+            // Output the safe vales to the motor drives.
+            leftDrive.setPower(left);
+            rightDrive.setPower(right);
+            backleftDrive.setPower(left);
+            backrightDrive.setPower(right);
+
+            yL2P = y2P;
+            y2P = gamepad2.y;
+            if(!yL2P && y2P){
+                safeftyLock = !safeftyLock;
+            }
+
+            if (gamepad2.right_trigger > 0.05 || gamepad1.right_trigger > 0.05) {
+                container.sweepRelease();
+                container.dumpBlock();
+                sweeper.sweep();
+                toggle2 = 1;
+            } else if (gamepad2.right_bumper || gamepad1.right_bumper) {
+                container.sweepRelease();
+                container.dumpBlock();
+                sweeper.dump();
+                toggle2 = 1;
+            } else {
+                container.sweepBlock();
+                sweeper.stop();
+            }
+
 
             // arm
             switchArmPowerLast = switchArmPowerCurr;
@@ -92,6 +142,11 @@ public class DuckAimTest extends T3_Base {
 
             dPadLeftLast2 = dPadLeft2;
             dPadLeft2 = gamepad2.dpad_left;
+
+            if(!dPadLeftLast2 && dPadLeft2){
+
+                arm.sweepPosTeleop();
+            }
 
 
             if(gamepad2.dpad_up) {
@@ -120,20 +175,57 @@ public class DuckAimTest extends T3_Base {
                 toggle1 = 2;
             }
 
+            // manual blocker controls
+
+
+            aL2P = a2P;
+            a2P = gamepad2.a;
+            if(!aL2P && a2P){
+                if(toggle1 % 2 != 0) {
+                    container.dumpBlock();
+                }else{
+                    if(sharedHubMode){
+                        container.dumpReleaseShared();
+                    }else{
+                        container.dumpRelease();
+                    }
+
+                }
+                toggle1++;
+            }
+
             xL2P = x2P;
             x2P = gamepad2.x;
             if(!xL2P && x2P){
-                if(status[0] == 1){
-                    turnToV2(status[1], 5000, this);
+                if(toggle2 % 2 != 0) {
+                    container.sweepBlock();
+                }else{
+                    container.sweepRelease();
                 }
+                toggle2++;
             }
 
+
+            if(gamepad1.y){
+                startCarouselBlue(carouselTime.milliseconds());
+            }else{
+                stopCarousel();
+                carouselTime.reset();
+            }
+
+
+
+
             // Send telemetry message to signify robot running;
-            telemetry.addLine("Duck detected + Ang " + (status[0] == 1 ? status[1]  : "False"));
+
+            telemetry.addLine("Arm Safety Status: "  + safeftyLock);
+            telemetry.addLine("odo pos " + wheelOdometry.displayPositions());
+            telemetry.addLine("cTime " + carouselTime.milliseconds());
             telemetry.addLine("imu angle " + getRelativeAngle());
             telemetry.update();
         }
 
+//        odometry.stopT265();
         sleep(2000);
     }
 }
