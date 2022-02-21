@@ -207,7 +207,7 @@ public class T3_Blue_TeleOp extends T3_Base {
 
 
             if(gamepad1.y){
-                startBlueCarousel();
+                startCarouselBlue(carouselTime.milliseconds());
             }else{
                 stopCarousel();
                 carouselTime.reset();

@@ -593,11 +593,16 @@ public abstract class T3_Base extends LinearOpMode {
             carousel.setPower(0.2);
             return;
         }
-        carousel.setPower((Math.sqrt(time) *  0.01));
+        carousel.setPower((1));
     }
 
     public void startCarouselBlue(double time){
-        carousel.setPower(-Math.sqrt(time) * 0.0015);
+//        carousel.setPower(time * 0.0004);
+        if(time <= 1000){
+            carousel.setPower(-0.2);
+            return;
+        }
+        carousel.setPower((-1));
     }
 
     public void startBlueCarousel(){
