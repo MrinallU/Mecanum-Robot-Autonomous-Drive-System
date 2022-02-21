@@ -57,7 +57,5 @@ public class Secondary_Blue_Autonomous extends Base {
         sleep(500);
 
         driveTrain.setMotorPowers(0, 0, 0, 0);
-
-
     }
 }
