@@ -78,7 +78,7 @@ public class T3_T265Odometry {
 //        }
 //            while (!slamera.isStarted()) {
 //                Log.w(tag, "Camera is not ready, starting...");
-//                sleep(1000); // replace if needed.
+                sleep(1000); // replace if needed.
 //                slamera.start();
 //            }
     }

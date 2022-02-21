@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.drive.DriveSignal;
 import com.acmerobotics.roadrunner.drive.TankDrive;
+import com.acmerobotics.roadrunner.followers.RamseteFollower;
 import com.acmerobotics.roadrunner.followers.TankPIDVAFollower;
 import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -21,6 +22,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -51,9 +53,9 @@ import static org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.DriveConstan
  */
 @Config
 public class Tank extends TankDrive {
-    public static PIDCoefficients AXIAL_PID = new PIDCoefficients(0, 0, 0);
-    public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(0, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
+    public static PIDCoefficients AXIAL_PID = new PIDCoefficients(0.05, 0, 0);
+    public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(1.8, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0.44, 0, 0);
 
     public static double VX_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
@@ -64,24 +66,28 @@ public class Tank extends TankDrive {
     private static final TrajectoryAccelerationConstraint accelConstraint = getAccelerationConstraint(MAX_ACCEL);
 
     private TrajectoryFollower follower;
+    private RamseteFollower ramseteFollower;
 
     private List<DcMotorEx> motors, leftMotors, rightMotors;
     private BNO055IMU imu;
 
     private VoltageSensor batteryVoltageSensor;
-
+    private DcMotorEx leftFront, leftRear, rightRear, rightFront;
     public Tank(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH);
-
+//
         follower = new TankPIDVAFollower(AXIAL_PID, CROSS_TRACK_PID,
                 new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
+//         follower = new RamseteFollower(0, 0, new Pose2d(0.5, 0.5, Math.toRadians(5.0)));
 
         LynxModuleUtil.ensureMinimumFirmwareVersion(hardwareMap);
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+        List<LynxModule> allHubs;
+        allHubs = hardwareMap.getAll(LynxModule.class);
 
-        for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
-            module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        for(LynxModule hub : allHubs){
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
         // TODO: adjust the names of the following hardware devices to match your configuration
@@ -113,10 +119,13 @@ public class Tank extends TankDrive {
         // BNO055IMUUtil.remapZAxis(imu, AxisDirection.NEG_Y);
 
         // add/remove motors depending on your robot (e.g., 6WD)
-        DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
-        DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+         leftFront = hardwareMap.get(DcMotorEx.class, "fLeft");
+         leftRear = hardwareMap.get(DcMotorEx.class, "bLeft");
+         rightRear = hardwareMap.get(DcMotorEx.class, "bRight");
+         rightFront = hardwareMap.get(DcMotorEx.class, "fRight");
+
+         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
         leftMotors = Arrays.asList(leftFront, leftRear);
@@ -142,7 +151,7 @@ public class Tank extends TankDrive {
 
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
-
+        setLocalizer(new TankLocalizer(this, true));
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
 
@@ -293,6 +302,14 @@ public class Tank extends TankDrive {
         for (DcMotorEx rightMotor : rightMotors) {
             rightMotor.setPower(v1);
         }
+    }
+
+
+    public void setMotorPowers(double v, double v1, double v2, double v3) {
+        leftFront.setPower(v);
+        leftRear.setPower(v1);
+        rightRear.setPower(v2);
+        rightFront.setPower(v3);
     }
 
     @Override

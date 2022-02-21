@@ -61,12 +61,10 @@ public class T3_Camera {
         double[] posTwo = new double[4];
         double[] posThree = new double[4];
 
-        try {
-            VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
-            bm = vuforia.convertFrameToBitmap(closeableFrame);
-        } catch (Exception e){
-            return 1;
-        }
+        VuforiaLocalizer.CloseableFrame closeableFrame = vuforia.getFrameQueue().take();
+        Thread.sleep(1000);
+        bm = vuforia.convertFrameToBitmap(closeableFrame);
+
 
         if(auto == "redPrimary"){
             posOne = calculateAverageRGB(bm, 113, 76, 136, 90);

@@ -1,0 +1,6 @@
+1. Test RR on old robot
+2. Tune RR on new Robot
+3. Make new bounding boxes for omni-capstone detection.
+4. Repair carousel dropping in old primary auto. 
+5. Duck Autoaim for primary auto. 
+

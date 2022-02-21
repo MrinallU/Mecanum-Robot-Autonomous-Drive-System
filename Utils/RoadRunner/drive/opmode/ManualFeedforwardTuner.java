@@ -12,11 +12,8 @@ import com.acmerobotics.roadrunner.util.NanoClock;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
-
-import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Mecanum;
-
+import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Tank;
 import java.util.Objects;
-
 import static org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.DriveConstants.MAX_ACCEL;
 import static org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.DriveConstants.MAX_VEL;
 import static org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.DriveConstants.RUN_USING_ENCODER;
@@ -40,13 +37,14 @@ import static org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.DriveConstan
  * Pressing B/O (Xbox/PS4) will cede control back to the tuning process.
  */
 @Config
+
 @Autonomous(group = "drive")
 public class ManualFeedforwardTuner extends LinearOpMode {
-    public static double DISTANCE = 72; // in
+    public static double DISTANCE = 12; // in
 
     private FtcDashboard dashboard = FtcDashboard.getInstance();
 
-    private Mecanum drive;
+    private Tank drive;
 
     enum Mode {
         DRIVER_MODE,
@@ -70,7 +68,7 @@ public class ManualFeedforwardTuner extends LinearOpMode {
 
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
-        drive = new Mecanum(hardwareMap);
+        drive = new Tank(hardwareMap);
 
         mode = Mode.TUNING_MODE;
 
