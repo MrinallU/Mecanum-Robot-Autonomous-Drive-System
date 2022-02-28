@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Mecanum;
 import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Tank;
 
@@ -15,7 +16,7 @@ import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Tank;
  * errors are not out of the ordinary, especially with sudden drive motions). The goal of this
  * exercise is to ascertain whether the localizer has been configured properly (note: the pure
  * encoder localizer heading may be significantly off if the track width has not been tuned).
- */@Disabled
+ */
 @TeleOp(group = "drive")
 public class LocalizationTest extends LinearOpMode {
     @Override
@@ -40,6 +41,11 @@ public class LocalizationTest extends LinearOpMode {
             Pose2d poseEstimate = drive.getPoseEstimate();
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
+
+            telemetry.addData("front ", drive.sensorFront.getDistance(DistanceUnit.INCH));
+            telemetry.addData("left ", drive.sensorLeft.getDistance(DistanceUnit.INCH));
+            telemetry.addData("right ", drive.sensorRight.getDistance(DistanceUnit.INCH));
+
             telemetry.addData("heading", poseEstimate.getHeading());
             telemetry.update();
         }

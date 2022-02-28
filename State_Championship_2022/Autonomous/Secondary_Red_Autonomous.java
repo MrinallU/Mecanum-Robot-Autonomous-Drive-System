@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.Camera;
 import org.firstinspires.ftc.teamcode.State_Championship_2022.Base;
 
-@Autonomous(name="Secondary_Red_Autonomous", group="Autonomous")
+@Autonomous(name="Secondary_Red_Autonomous", group="State")
 public class Secondary_Red_Autonomous extends Base {
     int pos =  1;
     String elementDiagram = "";

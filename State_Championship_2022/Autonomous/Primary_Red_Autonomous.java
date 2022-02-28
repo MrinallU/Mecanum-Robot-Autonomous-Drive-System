@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.State_Championship_2022.Modules.Camera;
 import org.firstinspires.ftc.teamcode.State_Championship_2022.Base;
 
-@Autonomous(name="Primary_Red_Autonomous", group="Autonomous")
+@Autonomous(name="Primary_Red_Autonomous", group="State")
 public class Primary_Red_Autonomous extends Base {
     int pos =  1;
     String elementDiagram = "";
@@ -114,7 +114,7 @@ public class Primary_Red_Autonomous extends Base {
         turnToV2(-175, 4000, this);
         sleep(500);
 
-        moveTicksBack(250, 1500, 0.1, 20, this);
+        moveTicksBack(250, 1500, 0.05, 20, this);
         sleep(500);
         moveTicksBack(100, 500, 0.05, 20, this);
 

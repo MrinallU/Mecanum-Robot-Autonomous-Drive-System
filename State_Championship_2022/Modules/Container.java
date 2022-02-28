@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Container {
     Servo frontBlocker, sideBlocker;
-    double frontBlockPos = 0.20, sideBlockPos = 0.3, frontReleasePos = 1, sideReleasePos = 0.7, sideSharedHubOpen = 0;
+    double frontBlockPos = 0.20, sideBlockPos = 0.3, frontReleasePos = 1, sideReleasePos = 0.7, sideSharedHubOpen = 0, cappingPosition = 1;
     
     public Container(Servo frontBlocker, Servo sideBlocker){
         this.frontBlocker = frontBlocker;
@@ -27,6 +27,9 @@ public class Container {
     public void sweepRelease(){ // get ready for sweeping
         frontBlocker.setPosition(frontReleasePos);
     }
+
+   public void setCappingPosition(){sideBlocker.setPosition(cappingPosition);}
+
 
     public void init(){
         frontBlocker.setPosition(frontReleasePos);

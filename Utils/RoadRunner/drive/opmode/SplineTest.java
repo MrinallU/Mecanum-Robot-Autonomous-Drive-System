@@ -13,8 +13,7 @@ import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Tank;
 
 /*
  * This is an example of a more complex path to really test the tuning.
- */@Disabled
-@Autonomous(group = "drive")
+ */@Autonomous(group = "drive")
 public class SplineTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

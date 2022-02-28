@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.State_Championship_2022;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="Red-TeleOp", group="T3")
+@TeleOp(name="Red-TeleOp", group="State")
 public class Red_TeleOp extends Base {
     boolean carouselIsOn = false;
     boolean sweeperIsOn = false;
@@ -36,10 +36,13 @@ public class Red_TeleOp extends Base {
     boolean sharedHubMode = false;
     boolean switchSideOpenLast = false, switchSideOpenCurr = false;
     boolean sharedHubModeOn = false;
+    boolean bumpLeftLP = false, bumpLeftP = false, cappingMode = false;
+    boolean bumpRightLP = false, bumpRightP = false, adjusted = false;
     int toggle1 = 1;
     int toggle2 = 1;
 
     ElapsedTime carouselTime = new ElapsedTime();
+
     @Override
     public void runOpMode() {
         double left;
@@ -74,24 +77,29 @@ public class Red_TeleOp extends Base {
                     getAngle());
 
             drive = -gamepad1.left_stick_y;
-            turn  =  gamepad1.right_stick_x;
+            turn = gamepad1.right_stick_x;
 
             // Combine drive and turn for blended motion.
-            left  = drive + turn;
+            left = drive + turn;
             right = drive - turn;
 
             max = Math.max(Math.abs(left), Math.abs(right));
-            if (max > 1.0)
-            {
+            if (max > 1.0) {
                 left /= max;
                 right /= max;
             }
 
             aLP = aP;
             aP = gamepad1.a;
-            if(aP && !aLP){
+            if (aP && !aLP) {
                 powerMult = slowToggle ? 0.3 : 1;
                 slowToggle = !slowToggle;
+            }
+
+            bumpLeftLP = bumpLeftP;
+            bumpLeftP = gamepad2.left_bumper;
+            if (bumpLeftP && !bumpLeftLP) {
+                cappingMode = !cappingMode;
             }
 
             left *= powerMult;
@@ -105,16 +113,16 @@ public class Red_TeleOp extends Base {
 
             yL2P = y2P;
             y2P = gamepad2.y;
-            if(!yL2P && y2P){
+            if (!yL2P && y2P) {
                 safeftyLock = !safeftyLock;
             }
 
-            if (gamepad2.right_trigger > 0.05 || gamepad1.right_trigger > 0.05) {
+            if (gamepad1.right_trigger > 0.05) {
                 container.sweepRelease();
                 container.dumpBlock();
                 sweeper.sweep();
                 toggle2 = 1;
-            } else if (gamepad2.right_bumper || gamepad1.right_bumper) {
+            } else if (gamepad1.right_bumper) {
                 container.sweepRelease();
                 container.dumpBlock();
                 sweeper.dump();
@@ -130,11 +138,10 @@ public class Red_TeleOp extends Base {
             switchArmPowerLast = switchArmPowerCurr;
             switchArmPowerCurr = gamepad2.b;
 
-            if(!switchArmPowerLast && switchArmPowerCurr){
+            if (!switchArmPowerLast && switchArmPowerCurr) {
                 sharedHubMode = !sharedHubMode;
             }
-            dPadRightLast2 = dPadRight2;
-            dPadRight2 = gamepad2.dpad_right;
+
 
             dPadUpLast2 = dPadUp2;
             dPadUp2 = gamepad2.dpad_up;
@@ -142,41 +149,38 @@ public class Red_TeleOp extends Base {
             dPadDownLast2 = dPadDown2;
             dPadDown2 = gamepad2.dpad_down;
 
-            dPadLeftLast2 = dPadLeft2;
-            dPadLeft2 = gamepad2.dpad_left;
 
-            if(!dPadLeftLast2 && dPadLeft2){
-                posReached = false;
-                arm.moveTop();
-            }
-
-            if(arm.motor1.retMotorEx().getCurrentPosition() > 950){
+            if (arm.motor1.retMotorEx().getCurrentPosition() > 950) {
                 posReached = true;
                 arm.motor1.useEncoder();
             }
 
 
-            if(gamepad2.dpad_up) {
-                if(!sharedHubMode){
+            if (gamepad2.dpad_up) {
+                if (!sharedHubMode && !cappingMode) {
                     arm.motor1.setPower(0.4);
-                }else{
+                } else if (sharedHubMode) {
                     arm.motor1.setPower(0.2);
+                } else {
+                    arm.motor1.setPower(0.1);
                 }
-            }else if(gamepad2.dpad_down){
-                if(!sharedHubMode){
+            } else if (gamepad2.dpad_down) {
+                if (!sharedHubMode && !cappingMode) {
                     arm.motor1.setPower(-0.4);
-                }else{
+                } else if (sharedHubMode) {
                     arm.motor1.setPower(-0.2);
+                } else {
+                    arm.motor1.setPower(-0.1);
                 }
-            }else{
-                if(arm.motor1.retMotorEx().getCurrentPosition() < 25) {
+            } else {
+                if (arm.motor1.retMotorEx().getCurrentPosition() < 25) {
                     arm.motor1.setPower(0);
-                }else{
+                } else {
                     arm.motor1.setPower(-0.001);
                 }
             }
 
-            if(arm.motor1.retMotorEx().getCurrentPosition() <= 700){
+            if (arm.motor1.retMotorEx().getCurrentPosition() <= 700) {
                 arm.container.dumpBlock(); // safety
                 toggle1 = 2;
             }
@@ -186,13 +190,16 @@ public class Red_TeleOp extends Base {
 
             aL2P = a2P;
             a2P = gamepad2.a;
-            if(!aL2P && a2P){
-                if(toggle1 % 2 != 0) {
+            if (!aL2P && a2P) {
+                if (toggle1 % 2 != 0) {
                     container.dumpBlock();
-                }else{
-                    if(sharedHubMode){
+                } else {
+                    if (sharedHubMode) {
                         container.dumpReleaseShared();
-                    }else{
+
+                    } else if (cappingMode) {
+                        container.setCappingPosition();
+                    } else {
                         container.dumpRelease();
                     }
 
@@ -200,40 +207,63 @@ public class Red_TeleOp extends Base {
                 toggle1++;
             }
 
-            xL2P = x2P;
-            x2P = gamepad2.x;
-            if(!xL2P && x2P){
-                if(toggle2 % 2 != 0) {
-                    container.sweepBlock();
-                }else{
-                    container.sweepRelease();
+            if (cappingMode) {
+                bumpRightLP = bumpRightP;
+                bumpRightP = gamepad2.right_bumper;
+                if (bumpRightP && !bumpRightLP) {
+                    adjusted = !adjusted;
+                    if (adjusted) {
+                        sideBlocker.setPosition(0.8);
+                    } else {
+                        sideBlocker.setPosition(1);
+                    }
                 }
-                toggle2++;
+
+                if (gamepad2.dpad_right) {
+                    sideBlocker.setPosition(sideBlocker.getPosition() + 0.01);
+
+                } else if (gamepad2.dpad_left) {
+                    sideBlocker.setPosition(sideBlocker.getPosition() - 0.01);
+                }
+
+                xL2P = x2P;
+                x2P = gamepad2.x;
+                if (!xL2P && x2P) {
+                    if (toggle2 % 2 != 0) {
+                        container.sweepBlock();
+                    } else {
+                        container.sweepRelease();
+                    }
+                    toggle2++;
+                }
+
+
+                if (gamepad1.y) {
+                    startCarousel(carouselTime.milliseconds());
+                } else {
+                    stopCarousel();
+                    carouselTime.reset();
+                }
+
+                //Capping Arm
+
+
+                // Send telemetry message to signify robot running;
+                if (sharedHubMode)
+                    telemetry.addLine("SHARED HUB MODE");
+                else if (cappingMode)
+                    telemetry.addLine("CAPPING MODE");
+                else
+                    telemetry.addLine("NORMAL MODE");
+                telemetry.addLine("Arm Safety Status: " + safeftyLock);
+                telemetry.addLine("odo pos " + wheelOdometry.displayPositions());
+                telemetry.addLine("imu angle " + getRelativeAngle());
+                telemetry.addLine("cTime " + carouselTime.milliseconds());
+                telemetry.update();
             }
-
-
-            if(gamepad1.y){
-                startCarousel(carouselTime.milliseconds());
-            }else{
-                stopCarousel();
-                carouselTime.reset();
-            }
-
-
-
-
-
-            // Send telemetry message to signify robot running;
-
-            telemetry.addLine("Arm Safety Status: "  + safeftyLock);
-            telemetry.addLine("odo pos " + wheelOdometry.displayPositions());
-            telemetry.addLine("imu angle " + getRelativeAngle());
-            telemetry.addLine("cTime " + carouselTime.milliseconds());
-            telemetry.addLine("Dump Shared: " + sharedHubModeOn);
-            telemetry.update();
-        }
 
 //        odometry.stopT265();
-        sleep(2000);
+            sleep(2000);
+        }
     }
 }

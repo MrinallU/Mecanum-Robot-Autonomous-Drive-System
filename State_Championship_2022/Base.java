@@ -80,6 +80,7 @@ public abstract class Base extends LinearOpMode {
             backleftDrive = new Motor(hardwareMap, "bLeft");
             backrightDrive = new Motor(hardwareMap, "bRight");
         }
+
         carousel = new Motor(hardwareMap, "carousel");
 
         if(useRR)
@@ -93,17 +94,20 @@ public abstract class Base extends LinearOpMode {
         arm = new Outtake(new Motor(hardwareMap, "arm", true), container, this,5.0);
         sweeper = new Intake(new Motor(hardwareMap,  "sweeper"));
 
-        //IMU
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
+        //IMU
+        if(!useRR) {
+            BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+            parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+            parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+            parameters.loggingEnabled = true;
+            parameters.loggingTag = "IMU";
+            parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+            imu = hardwareMap.get(BNO055IMU.class, "imu");
+            imu.initialize(parameters);
+        }
 
         // Start Motors
         if(!useRR) {
@@ -111,23 +115,24 @@ public abstract class Base extends LinearOpMode {
             rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors'
             backrightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
             backleftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
+            stopBot();
         }
 
-        stopBot();
 
         initServos();
 
         // Odometry
-        resetAngle();
-        if(matchType == 1){
-            initAngle = -179;
-            currAngle = -179;
-            wheelOdometry = new DifferentialDriveOdometry(0, 0, -179);
-        }
-        else{
-            initAngle = 0;
-            currAngle = 0;
-            wheelOdometry = new DifferentialDriveOdometry(0, 0, 0);
+        if(!useRR) {
+            resetAngle();
+            if (matchType == 1) {
+                initAngle = -179;
+                currAngle = -179;
+                wheelOdometry = new DifferentialDriveOdometry(0, 0, -179);
+            } else {
+                initAngle = 0;
+                currAngle = 0;
+                wheelOdometry = new DifferentialDriveOdometry(0, 0, 0);
+            }
         }
     }
 
@@ -198,7 +203,7 @@ public abstract class Base extends LinearOpMode {
     }
 
     // my imu based turnTo
-    public void turnToV2(double targetAngle, double timeout, double powerCap, LinearOpMode opMode)  {
+    public void turnToV2(double targetAngle, double timeout, double powerCap, LinearOpMode opMode, boolean useRR)  {
         double angleDiff = 100, currTime = 0;
         double prevAngleDiff = 100;
         double dAng, iAng = 0;
@@ -208,38 +213,50 @@ public abstract class Base extends LinearOpMode {
 
         while (time.milliseconds() < timeout && Math.abs(targetAngle - getAngle()) > 1 && opMode.opModeIsActive())  {
             cycleTime.reset();
-            resetCache();
+            if(useRR == false)
+                resetCache();
+            else
+                driveTrain.update();
             // update odometry convert tick velocity to inch velocity
-            wheelOdometry.updatePosition(
-                    leftDrive.encoderReading(),
-                    rightDrive.encoderReading(),
-                    getAngle());
-
+            if(!useRR) {
+                wheelOdometry.updatePosition(
+                        leftDrive.encoderReading(),
+                        rightDrive.encoderReading(),
+                        getAngle());
+            }
 
             currTime = time.milliseconds() + 0.00001; // avoids divide by 0 error
 
             // error from input
-            angleDiff = Angle.angleDifference(getAngle(), targetAngle);
+            if(!useRR)
+                angleDiff = Angle.angleDifference(Angle.normalize(Math.toDegrees(driveTrain.getRawExternalHeading())), targetAngle);
+            else
+                angleDiff = Angle.angleDifference(getAngle(), targetAngle);
+
 
             // 0.1 = f, tanh = makes the values approach 1 to -1
             double power = Math.tanh(k_p * angleDiff);
 
-            setDrivePowers(-power, power, -power, power);
-            telemetry.addLine(wheelOdometry.displayPositions());
+            if(!useRR)
+                setDrivePowers(-power, power, -power, power);
+            else
+                driveTrain.setMotorPowers(-power, power, -power, power);
+//            telemetry.addLine(wheelOdometry.displayPositions());
             telemetry.update();
-
-            // Teleop Breakout
-            if(gamepad1.a && gamepad2.a){
-                break;
-            }
         }
         // stop when pos is reached
-        stopBot();
+        if(!useRR)
+            stopBot();
     }
 
-    public void turnToV2(double targetAngle, double timeout, LinearOpMode opMode){ turnToV2(targetAngle, timeout, 1, opMode); }
+    public void turnRR(double targetAngle)  {
+        double currAngle = Angle.normalize(driveTrain.getRawExternalHeading());
+        driveTrain.turn(Math.toRadians(targetAngle  - currAngle));
+    }
 
-    public boolean xTo(double targetX, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate, boolean useCam){
+    public void turnToV2(double targetAngle, double timeout, LinearOpMode opMode){ turnToV2(targetAngle, timeout, 1, opMode, false); }
+
+    public boolean xTo(double targetX, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate, boolean useCam)  {
         double currX = wheelOdometry.getX(); // replace as needed
         ElapsedTime time = new ElapsedTime();
         double prevError = 0;

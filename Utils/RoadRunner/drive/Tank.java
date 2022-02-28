@@ -23,11 +23,16 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Utils.Angle;
 import org.firstinspires.ftc.teamcode.Utils.RoadRunner.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.Utils.RoadRunner.trajectorysequence.TrajectorySequenceBuilder;
@@ -70,6 +75,7 @@ public class Tank extends TankDrive {
     private RamseteFollower ramseteFollower;
 
     private List<DcMotorEx> motors, leftMotors, rightMotors;
+    public DistanceSensor sensorFront, sensorLeft, sensorRight;
     private BNO055IMU imu;
 
     private VoltageSensor batteryVoltageSensor;
@@ -124,6 +130,10 @@ public class Tank extends TankDrive {
          leftRear = hardwareMap.get(DcMotorEx.class, "bLeft");
          rightRear = hardwareMap.get(DcMotorEx.class, "bRight");
          rightFront = hardwareMap.get(DcMotorEx.class, "fRight");
+
+          sensorFront = hardwareMap.get(DistanceSensor.class, "sensorFront");
+        sensorLeft = hardwareMap.get(DistanceSensor.class, "sensorLeft");
+        sensorRight = hardwareMap.get(DistanceSensor.class, "sensorRight");
 
          rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -309,6 +319,14 @@ public class Tank extends TankDrive {
         }
     }
 
+    public void resetPoseBlue(){
+        setPoseEstimate(new Pose2d(sensorLeft.getDistance(DistanceUnit.INCH), sensorFront.getDistance(DistanceUnit.INCH), getPoseEstimate().getHeading()));
+    }
+
+    public void resetPoseRed(){
+        setPoseEstimate(new Pose2d(sensorRight.getDistance(DistanceUnit.INCH), sensorFront.getDistance(DistanceUnit.INCH), getPoseEstimate().getHeading()));
+    }
+
 
     public void setMotorPowers(double v, double v1, double v2, double v3) {
         leftFront.setPower(v);
@@ -320,6 +338,11 @@ public class Tank extends TankDrive {
     @Override
     public double getRawExternalHeading() {
         return imu.getAngularOrientation().firstAngle;
+    }
+
+    public double getTurnAng(){
+        return imu.getAngularOrientation(
+        ).firstAngle;
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 // todo: remove t265 in teleop
-@TeleOp(name="Blue-TeleOp", group="T3")
+@TeleOp(name="Blue-TeleOp", group="State")
 public class Blue_TeleOp extends Base {
     boolean carouselIsOn = false;
     boolean sweeperIsOn = false;
@@ -33,6 +33,7 @@ public class Blue_TeleOp extends Base {
     boolean safeftyLock = true;
     boolean switchArmPowerCurr, switchArmPowerLast;
     boolean sharedHubMode = false;
+    boolean bumpLeftLP = false, bumpLeftP = false, cappingMode = false;
 
     int toggle1 = 1;
     int toggle2 = 1;
@@ -93,6 +94,13 @@ public class Blue_TeleOp extends Base {
                 slowToggle = !slowToggle;
             }
 
+            bumpLeftLP = bumpLeftP;
+            bumpLeftP = gamepad2.left_bumper;
+            if(bumpLeftP && !bumpLeftLP){
+                cappingMode=!cappingMode;
+            }
+
+
             left *= powerMult;
             right *= powerMult;
 
@@ -150,21 +158,24 @@ public class Blue_TeleOp extends Base {
 
 
             if(gamepad2.dpad_up) {
-                if(!sharedHubMode){
+                if(!sharedHubMode && !cappingMode){
                     arm.motor1.setPower(0.4);
-                }else{
+                }else if(sharedHubMode){
                     arm.motor1.setPower(0.2);
+                }else{
+                    arm.motor1.setPower(0.1);
                 }
             }else if(gamepad2.dpad_down){
-                if(!sharedHubMode){
+                if(!sharedHubMode && !cappingMode){
                     arm.motor1.setPower(-0.4);
-                }else{
+                }else if(sharedHubMode){
                     arm.motor1.setPower(-0.2);
+                }else{
+                    arm.motor1.setPower(-0.1);
                 }
             }else{
                 if(arm.motor1.retMotorEx().getCurrentPosition() < 25) {
                     arm.motor1.setPower(0);
-                    arm.motor1.useEncoder();
                 }else{
                     arm.motor1.setPower(-0.001);
                 }
@@ -176,8 +187,6 @@ public class Blue_TeleOp extends Base {
             }
 
             // manual blocker controls
-
-
             aL2P = a2P;
             a2P = gamepad2.a;
             if(!aL2P && a2P){
@@ -186,13 +195,18 @@ public class Blue_TeleOp extends Base {
                 }else{
                     if(sharedHubMode){
                         container.dumpReleaseShared();
-                    }else{
+
+                    }else  if(cappingMode){
+                        container.setCappingPosition();
+                    }
+                    else{
                         container.dumpRelease();
                     }
 
                 }
                 toggle1++;
             }
+
 
             xL2P = x2P;
             x2P = gamepad2.x;
@@ -217,7 +231,12 @@ public class Blue_TeleOp extends Base {
 
 
             // Send telemetry message to signify robot running;
-
+            if(sharedHubMode)
+                telemetry.addLine("SHARED HUB MODE");
+            else if(cappingMode)
+                telemetry.addLine("CAPPING MODE");
+            else
+                telemetry.addLine("NORMAL MODE");
             telemetry.addLine("Arm Safety Status: "  + safeftyLock);
             telemetry.addLine("odo pos " + wheelOdometry.displayPositions());
             telemetry.addLine("cTime " + carouselTime.milliseconds());
