@@ -20,6 +20,7 @@ import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAcceleration
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -28,6 +29,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -198,6 +201,36 @@ public class Tank extends TankDrive {
         turnAsync(angle);
         waitForIdle();
     }
+    public void turnToV2(double targetAngle, double timeout, double powerCap)  {
+        double angleDiff = 100, currTime = 0;
+        double prevAngleDiff = 100;
+        double dAng, iAng = 0;
+
+        ElapsedTime time = new ElapsedTime(), cycleTime = new ElapsedTime();
+        double prevTime = 0;
+
+        while (time.milliseconds() < timeout && Math.abs(targetAngle - Angle.normalize(Angle.radians_to_degrees(getRawExternalHeading()))) > 1 )  {
+            cycleTime.reset();
+            update();
+
+            currTime = time.milliseconds() + 0.00001; // avoids divide by 0 error
+
+                angleDiff = Angle.angleDifference(Angle.normalize(Angle.radians_to_degrees(getRawExternalHeading())), targetAngle);
+
+
+            // 0.1 = f, tanh = makes the values approach 1 to -1
+            double power = Math.tanh(0.01 * angleDiff);
+
+            leftFront.setPower(-power);
+            rightFront.setPower(power);
+            leftRear.setPower(-power);
+            rightRear.setPower(power);
+        }
+        leftFront.setPower(0);
+        rightFront.setPower(0);
+        leftRear.setPower(0);
+        rightRear.setPower(0);
+    }
 
     public void turnToAbs(double angle){
         turn(angle - getPoseEstimate().getHeading());
@@ -333,6 +366,83 @@ public class Tank extends TankDrive {
         leftRear.setPower(v1);
         rightRear.setPower(v2);
         rightFront.setPower(v3);
+    }
+
+    public boolean yTo(double targetY, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate){
+        ElapsedTime time = new ElapsedTime();
+        double prevError = 0;
+        double prevTime = 0;
+        double currTime = 0;
+        double Y = getPoseEstimate().getY();
+        while(Math.abs(Y - targetY) > minDifference && time.milliseconds() < timeout && opMode.opModeIsActive()){
+            // update odometry convert tick velocity to inch velocity
+            currTime = time.milliseconds();
+            update();
+
+            Y = getPoseEstimate().getY();
+
+            double yDiff = targetY - Y;
+            double drive = Range.clip((yDiff * 0.055), -powerCap, powerCap) * -1;
+
+            if(negate){
+                drive *= -1;
+            }
+            leftFront.setPower(drive);
+            rightFront.setPower(drive);
+            leftRear.setPower(drive);
+            rightRear.setPower(drive);
+        }
+        boolean works =  time.milliseconds() < timeout;
+        leftFront.setPower(0);
+        rightFront.setPower(0);
+        leftRear.setPower(0);
+        rightRear.setPower(0);
+
+        // works
+        return works;
+    }
+
+    public void moveTicks(double ticksMoved, double timeout, double powerCap, double minDifference, LinearOpMode opMode, boolean negate){
+        // update odometry convert tick velocity to inch velocity
+
+        double currTicks = leftFront.getCurrentPosition(); // todo: average all the values?? (further research required)
+        double destTick;
+        double prevError = 0;
+        double prevTime = 0;
+        double currTime = 0;
+        ElapsedTime time = new ElapsedTime();
+
+        if(negate) {
+            destTick = currTicks - ticksMoved;
+        }else{
+            destTick = currTicks + ticksMoved;
+        }
+
+        while(Math.abs(currTicks - (destTick)) > minDifference && time.milliseconds() < timeout && opMode.opModeIsActive()){
+            // update odometry convert tick velocity to inch velocity
+            currTime = time.milliseconds();
+            update();
+
+            currTicks = leftFront.getCurrentPosition();
+
+            double tickDiff = destTick - currTicks;
+            double drive = Range.clip((tickDiff * 0.055), -powerCap, powerCap); // p-controller
+
+            leftFront.setPower(drive);
+            rightFront.setPower(drive);
+            leftRear.setPower(drive);
+            rightRear.setPower(drive);
+
+            prevError = tickDiff;
+            prevTime = currTime;
+
+        }
+        leftFront.setPower(0);
+        rightFront.setPower(0);
+        leftRear.setPower(0);
+        rightRear.setPower(0);
+
+
     }
 
     @Override

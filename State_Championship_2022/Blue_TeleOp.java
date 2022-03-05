@@ -34,6 +34,7 @@ public class Blue_TeleOp extends Base {
     boolean switchArmPowerCurr, switchArmPowerLast;
     boolean sharedHubMode = false;
     boolean bumpLeftLP = false, bumpLeftP = false, cappingMode = false;
+    boolean bumpRightLP = false, bumpRightP = false, adjusted = false;
 
     int toggle1 = 1;
     int toggle2 = 1;
@@ -116,12 +117,12 @@ public class Blue_TeleOp extends Base {
                 safeftyLock = !safeftyLock;
             }
 
-            if (gamepad2.right_trigger > 0.05 || gamepad1.right_trigger > 0.05) {
+            if (gamepad1.right_trigger > 0.05) {
                 container.sweepRelease();
                 container.dumpBlock();
                 sweeper.sweep();
                 toggle2 = 1;
-            } else if (gamepad2.right_bumper || gamepad1.right_bumper) {
+            } else if (gamepad1.right_bumper) {
                 container.sweepRelease();
                 container.dumpBlock();
                 sweeper.dump();
@@ -184,6 +185,20 @@ public class Blue_TeleOp extends Base {
             if(arm.motor1.retMotorEx().getCurrentPosition() <= 700 && safeftyLock){
                 arm.container.dumpBlock(); // safety
                 toggle1 = 2;
+            }
+
+
+            if(cappingMode){
+                bumpRightLP = bumpRightP;
+                bumpRightP = gamepad2.right_bumper;
+                if(bumpRightP && !bumpRightLP){
+                    adjusted = !adjusted;
+                    if(adjusted){
+                        sideBlocker.setPosition(0.8);
+                    }else{
+                        sideBlocker.setPosition(1);
+                    }
+                }
             }
 
             // manual blocker controls

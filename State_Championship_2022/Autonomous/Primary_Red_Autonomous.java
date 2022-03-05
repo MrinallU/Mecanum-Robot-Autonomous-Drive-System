@@ -25,6 +25,7 @@ public class Primary_Red_Autonomous extends Base {
         try {
             pos = camera.readBarcode("redPrimary");
         }catch (Exception e){
+
             pos = 1;
         }
 
@@ -116,7 +117,7 @@ public class Primary_Red_Autonomous extends Base {
 
         moveTicksBack(250, 1500, 0.05, 20, this);
         sleep(500);
-        moveTicksBack(100, 500, 0.05, 20, this);
+        moveTicksBack(270, 500, 0.05, 20, this);
 
         startCarousel();
         sleep(3000);

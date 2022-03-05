@@ -25,8 +25,8 @@ public class Camera {
     private VuforiaLocalizer vuforia;
     private HardwareMap hardwareMap;
 
-    private int blueThreshold = 100;
-    private int redThreshold = 70;
+    private int blueThreshold = 60;
+    private int redThreshold = 90;
     private VuforiaTrackables targetsFreightFrenzy;
     public String outStr = "";
 
@@ -49,54 +49,56 @@ public class Camera {
 
 
         if(auto == "redPrimary"){
-            posOne = calculateAverageRGB(bm, 113, 76, 136, 90);
-            posTwo = calculateAverageRGB(bm, 512, 69, 600, 120);
-            posThree = calculateAverageRGB(bm, 0, 0, 0, 0);
+            posOne = calculateAverageRGB(bm, 0, 0, 0, 0);
+            posTwo = calculateAverageRGB(bm, 542, 43, 555, 58);
+            posThree = calculateAverageRGB(bm, 142, 55, 160, 66);
         }else if(auto == "redSecondary"){
             posOne = calculateAverageRGB(bm, 448, 48, 550, 105);
             posTwo = calculateAverageRGB(bm, 36, 52, 134, 113);
             posThree = calculateAverageRGB(bm, 0, 0, 0, 0);
         }else if(auto == "bluePrimary"){
-            posOne = calculateAverageRGB(bm, 420, 16, 535, 75);
-            posTwo = calculateAverageRGB(bm, 27 , 26, 127, 94);
-            posThree = calculateAverageRGB(bm, 0, 0, 0, 0);
+            posOne = calculateAverageRGB(bm, 515, 53, 536, 63);
+            posTwo = calculateAverageRGB(bm, 109 , 62, 124, 70);
+            posThree = calculateAverageRGB(bm, 160, 57, 180, 70);
         }else if(auto == "blueSecondary"){
 //            posOne = calculateAverageRGB(bm, 804, 69, 869, 115);
-            posTwo = calculateAverageRGB(bm, 360, 82, 486, 116);
-            posThree = calculateAverageRGB(bm, 76, 81, 187, 125);
+            posTwo = calculateAverageRGB(bm, 536 , 40, 556, 70);
+            posThree = calculateAverageRGB(bm, 160, 57, 180, 70);
         }
 
-        saveImage();
+//        saveImage(9);
+
+
         if(auto == "redPrimary"){
-            if(posOne[3] < redThreshold){
-                return 0;
-            }else if(posTwo[3] < redThreshold){
+            if(posTwo[3] < redThreshold){
                 return 1;
-            }else{
+            }else if(posThree[3]  < redThreshold){
                 return 2;
+            }else{
+                return 0;
             }
         }else if(auto == "bluePrimary"){
-            if(posOne[1] < redThreshold){
+            if(posOne[3] < blueThreshold){
                 return 0;
-            }else if(posTwo[1] < redThreshold){
+            }else if(posTwo[3] < blueThreshold){
                 return 1;
             }else{
                 return 2;
             }
         }else if(auto == "redSecondary"){
-            if(posOne[3] < redThreshold){
-                return 0;
-            }else if(posTwo[3] < redThreshold){
+            if(posTwo[3] < redThreshold){
                 return 1;
-            }else{
+            }else if(posThree[3]  < redThreshold){
                 return 2;
+            }else{
+                return 0;
             }
         } else{
-            if (posThree[1] < redThreshold) {
-                return 2;
-            } else if (posTwo[1] < redThreshold) {
+            if(posTwo[3] < blueThreshold){
                 return 1;
-            } else {
+            }else if(posThree[3]  < blueThreshold){
+                return 2;
+            }else{
                 return 0;
             }
         }

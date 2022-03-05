@@ -228,7 +228,7 @@ public abstract class Base extends LinearOpMode {
             currTime = time.milliseconds() + 0.00001; // avoids divide by 0 error
 
             // error from input
-            if(!useRR)
+            if(useRR)
                 angleDiff = Angle.angleDifference(Angle.normalize(Math.toDegrees(driveTrain.getRawExternalHeading())), targetAngle);
             else
                 angleDiff = Angle.angleDifference(getAngle(), targetAngle);
@@ -527,14 +527,14 @@ public abstract class Base extends LinearOpMode {
 
 
     public void startCarousel(){
-        carousel.setPower(1);
+        carousel.setPower(0.35);
     }
 
     // gradual carousel acceleration
     public void startCarousel(double time){
 //        carousel.setPower(time * 0.0004);
-        if(time <= 1000){
-            carousel.setPower(0.2);
+        if(time <= 1250){
+            carousel.setPower(0.6);
             return;
         }
         carousel.setPower((1));
@@ -542,15 +542,15 @@ public abstract class Base extends LinearOpMode {
 
     public void startCarouselBlue(double time){
 //        carousel.setPower(time * 0.0004);
-        if(time <= 1000){
-            carousel.setPower(-0.2);
+        if(time <= 1250){
+            carousel.setPower(-0.6);
             return;
         }
         carousel.setPower((-1));
     }
 
     public void startBlueCarousel(){
-        carousel.setPower(-1);
+        carousel.setPower(-0.35);
     }
     public void stopCarousel(){
         carousel.setPower(0);

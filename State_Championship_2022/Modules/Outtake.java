@@ -24,7 +24,12 @@ public class Outtake {
 
     public void moveTop(){
         container.sweepBlock();
-        moveToPosition(970);
+        moveToPosition(940);
+    }
+
+    public void moveTopSecondCycleBlue(){
+        container.sweepBlock();
+        moveToPosition(890);
     }
 
     public void moveMid(){
@@ -32,9 +37,14 @@ public class Outtake {
         moveToPosition(1150);
     }
 
+    public void moveMidBlueSecond(){
+        container.sweepBlock();
+        moveToPosition(1115);
+    }
+
     public void moveMidBluePrim(){
         container.sweepBlock();
-        moveToPosition(1125);
+        moveToPosition(1135);
     }
 
 
@@ -60,7 +70,7 @@ public class Outtake {
 
     public void moveBottomBlueSecondary(){
         container.sweepBlock();
-        moveToPosition(1270);
+        moveToPosition(1240);
     }
 
     public void sweepPos(){

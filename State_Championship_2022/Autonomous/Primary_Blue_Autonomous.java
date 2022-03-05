@@ -55,17 +55,17 @@ public class Primary_Blue_Autonomous extends Base {
 
         if(pos == 0){
             arm.moveBottom();
-            sleep(1500);
+            sleep(2500);
             moveTicksBack(600, 4000, 0.4, 20, this);
             bottomOffset = 60;
         }else if(pos == 1){
             arm.moveMidBluePrim();
-            sleep(1500);
+            sleep(2500);
             moveTicksBack(660, 4000, 0.4, 20, this);
         }else{
             arm.moveTop();
-            sleep(1500);
-            moveTicksBack(660, 4000, 0.4, 20, this);
+            sleep(2500);
+            moveTicksBack(600, 4000, 0.4, 20, this);
         }
 
 
@@ -82,7 +82,7 @@ public class Primary_Blue_Autonomous extends Base {
         container.dumpBlock();
         sleep(500);
         arm.moveToPosition(300);
-        sleep(500);
+        sleep(1000);
 
         turnToV2(180, 4000, this);
         sleep(500);
@@ -90,14 +90,14 @@ public class Primary_Blue_Autonomous extends Base {
         moveTicksBack(200, 3000, 0.4, 20, this);
         sleep(250);
 
-        turnToV2(-92, 4000, this);
+        turnToV2(-88, 4000, this);
         sleep(500);
 
 
-        moveTicksBack(1100, 6000, 0.2, 20, this); // @Parth tune this: move to carousel
+        moveTicksBack(1000, 6000, 0.2, 20, this); // @Parth tune this: move to carousel
         sleep(500);
 
-//        moveTicksBack(70, 6000, 0.05, 20, this); // @Parth tune this: move to carousel
+        moveTicksBack(140, 6000, 0.03, 20, this); // @Parth tune this: move to carousel
 //        sleep(250);
         startBlueCarousel();
         sleep(3000);

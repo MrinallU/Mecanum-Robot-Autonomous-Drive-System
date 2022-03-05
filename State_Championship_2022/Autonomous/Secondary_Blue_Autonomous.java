@@ -20,61 +20,136 @@ public class Secondary_Blue_Autonomous extends Base {
         Camera camera = new Camera(hardwareMap);
         sleep(2000);
 
-        pos = camera.readBarcode("blueSecondary");
+
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
 
+        pos = camera.readBarcode("blueSecondary");
 
         if (isStopRequested()) return;
         arm.moveToPosition(300);
         // todo finish inital deposit
         // aligns robot for inital deposit
         Trajectory traj = driveTrain.trajectoryBuilder(new Pose2d(), true)
-                .splineTo(new Vector2d(-20, 25), Math.toRadians(90))
+                .back(13)
                 .build();
 
         driveTrain.followTrajectory(traj);
+        sleep(250);
+
+        driveTrain.turn(Math.toRadians(90));
+        sleep(250);
+
+
+
+
+        double dist = 0, tickOffset = 0;
+        if (pos == 0) {
+            arm.moveBottomBlueSecondary();
+            dist = 14;
+            tickOffset = 0;
+        } else if (pos == 1) {
+            arm.moveMidBlueSecond();
+            dist = 16;
+            tickOffset = 120;
+        } else {
+            arm.moveTop();
+            dist = 18;
+            tickOffset = 160;
+        }
+
+
+        sleep(1000);
+
+        Trajectory deposit = driveTrain.trajectoryBuilder(driveTrain.getPoseEstimate(), false)
+                .forward(dist)
+                .build();
+        driveTrain.followTrajectory(deposit);
 
         sleep(250);
+        arm.dump();
+        sleep(250);
+
+        driveTrain.moveTicks((1700+tickOffset), 4000, 0.5, 20, this, true);
+        container.dumpBlock();
+        arm.moveToPosition(300);
+
+        sleep(500);
+
+
 
         driveTrain.turn(Math.toRadians(180));
         sleep(250);
+        driveTrain.setPoseEstimate(new Pose2d(0, 0, driveTrain.getPoseEstimate().getHeading()));
 
-        // lower arm
-        if(pos == 0){
-            arm.moveBottom();
-        }else if(pos == 1){
-            arm.moveMid();
-        }else{
-            arm.moveTop();
-        }
-        sleep(1000);
+        arm.sweepPos();
+        sleep(1500);
 
-        // drive in to dump
-        Trajectory traj2 = driveTrain.trajectoryBuilder(driveTrain.getPoseEstimate(), false)
+        sweeper.sweep();
+        Trajectory sweepSpline = driveTrain.trajectoryBuilder(driveTrain.getPoseEstimate(), false)
                 .forward(12)
                 .build();
-        driveTrain.followTrajectory(traj2);
+        driveTrain.followTrajectory(sweepSpline);
+
+        sleep(1000);
+        arm.container.sweepBlock();
+        sweeper.stop();
+
+        arm.moveToPosition(300);
+
+        Trajectory alignBack = driveTrain.trajectoryBuilder(driveTrain.getPoseEstimate(), false)
+                .back(10)
+                .build();
+        driveTrain.followTrajectory(alignBack);
 
         sleep(250);
+        driveTrain.turnToV2(25, 2000, 1);
 
-        // dump and reblock
+        sleep(250);
+        Trajectory align2 = driveTrain.trajectoryBuilder(driveTrain.getPoseEstimate(), false)
+                .back(6)
+                .build();
+        driveTrain.followTrajectory(align2);
+
+        driveTrain.turnToV2(120, 2000, 1);
+
+
+        sleep(100);
+        driveTrain.moveTicks(1680, 4000, 0.5, 20, this, false);
+        sleep(250);
+        driveTrain.turnToV2(65, 2000, 1);
+        sleep(100);
+        arm.moveTopSecondCycleBlue();
+        driveTrain.moveTicks(650, 4000, 0.5, 20, this, false);
+        sleep(700);
         arm.dump();
-        sleep(750);
+        sleep(500);
         arm.container.dumpBlock();
+        arm.moveToPosition(300);
+        driveTrain.moveTicks(2200, 4000, 0.8, 20, this, true);
+        sleep(1000);
+
+
+
+
+
+
+
+
+
 
 
         // move back
-        Trajectory traj3 = driveTrain.trajectoryBuilder(driveTrain.getPoseEstimate(), false)
-                .back(50)
-                .build();
-        driveTrain.followTrajectory(traj3);
+
+
+
+
 
 
         // park
 
-        sleep(250);
+
 
         // park in the warehouse
 //        Trajectory traj4 = driveTrain.trajectoryBuilder(driveTrain.getPoseEstimate(), false) // make the start of the trajectory the curr robot pose always!

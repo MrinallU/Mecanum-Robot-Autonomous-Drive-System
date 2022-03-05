@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Utils.Angle;
 import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Mecanum;
 import org.firstinspires.ftc.teamcode.Utils.RoadRunner.drive.Tank;
 
@@ -36,6 +37,10 @@ public class LocalizationTest extends LinearOpMode {
                     )
             );
 
+            if(gamepad1.a){
+                drive.setPoseEstimate(new Pose2d(0, 0, drive.getPoseEstimate().getHeading()));
+            }
+
             drive.update();
 
             Pose2d poseEstimate = drive.getPoseEstimate();
@@ -47,6 +52,7 @@ public class LocalizationTest extends LinearOpMode {
             telemetry.addData("right ", drive.sensorRight.getDistance(DistanceUnit.INCH));
 
             telemetry.addData("heading", poseEstimate.getHeading());
+            telemetry.addData("headingAlt", Angle.normalize(Angle.radians_to_degrees(drive.getRawExternalHeading())));
             telemetry.update();
         }
     }
