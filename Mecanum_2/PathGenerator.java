@@ -1,12 +1,96 @@
-package org.firstinspires.ftc.teamcode.Utils;
+package org.firstinspires.ftc.teamcode.Mecanum_2;
+
+import org.firstinspires.ftc.teamcode.Utils.Point;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
-public class SplineGenerator {
+public class PathGenerator {
 
+    // todo: replace prints in favor of logs.
+    public static ArrayList < Point > interpSplinePath(ArrayList < Point > pts, Point curLoc) {
+
+        boolean incX = true, none = true;
+        ArrayList < Point > wp = new ArrayList < > (), cur = new ArrayList < > ();
+        cur.add(new Point(curLoc.xP, curLoc.yP));
+        Point prev = new Point(curLoc.xP, curLoc.yP);
+        if (pts.size() == 1) {
+            wp.add(pts.get(0));
+            return wp;
+        }
+
+        for (int i = 0; i < pts.size(); i++) {
+            System.out.println(cur + " " + incX);
+            if (!none) {
+                if (incX) {
+                    // test for conflicting
+                    if (!(pts.get(i).xP > prev.xP)) {
+                        System.out.println(cur + " " + pts.get(i));
+                        wp.addAll(generateSplinePath(cur, 0.5));
+                        cur.clear();
+                        none = true;
+                        incX = false;
+                        cur.add(prev);
+                    } else {
+                        cur.add(pts.get(i));
+                    }
+                } else {
+                    // test for conflicting
+                    if (!(pts.get(i).xP < prev.xP)) {
+                        ArrayList < Point > p = generateSplinePath(cur, 0.5);
+                        Collections.reverse(p);
+                        wp.addAll(p);
+                        cur.clear();
+                        none = true;
+                        incX = true;
+                        cur.add(prev);
+                    } else {
+                        cur.add(pts.get(i));
+                    }
+                }
+            }
+
+            if (none) {
+                cur.add(pts.get(i));
+                System.out.println(cur);
+                if (cur.get(0).xP < cur.get(1).xP) {
+                    incX = true;
+                    none = false;
+                } else if (cur.get(0).xP > cur.get(1).xP) {
+                    incX = false;
+                    none = false;
+                } else {
+                    wp.addAll(generateLinearSpline(cur));
+                    cur.clear();
+                    cur.add(pts.get(i));
+                }
+            }
+
+            prev = pts.get(i);
+        }
+
+        if (cur.size() == 1) {
+            wp.addAll(generateLinearSpline(new ArrayList < Point > (
+                    Arrays.asList(
+                            wp.get(wp.size() - 1), cur.get(0)
+                    )
+            )));
+        } else if (cur.size() > 1) {
+            System.out.println(cur);
+            ArrayList < Point > p = generateSplinePath(cur, 0.5);
+            if (!incX) {
+                Collections.reverse(p);
+            }
+            wp.addAll(p);
+        }
+
+        System.out.println(wp.size());
+        System.out.println(wp);
+        return wp;
+    }
 
     // NOTE: To visualize splines use this (we use cubic splines as opposed to roadrunner's quintic splines):
     // https://github.com/MrinallU/Cubic-Spline-Interpolator
@@ -16,22 +100,21 @@ public class SplineGenerator {
     // todo: Repeat for the theta process
     // resource: https://github.com/acmerobotics/road-runner/blob/master/doc/pdf/Quintic_Splines_for_FTC.pdf
     // resource: helpful python visualizer https://github.com/acmerobotics/road-runner/blob/master/doc/notebook/road-runner-lite.ipynb
-    public SplineGenerator(){
+    public PathGenerator() {
 
     }
 
     /**
-     *
      * @param p Array of points which the spline will interpolate
      * @return A series of waypoints which a differential drive robot can follow.
      */
-    public ArrayList<Point> generateSplinePath(Point [] p, int step) {
+    public static ArrayList < Point > generateSplinePath(Point[] p, double step) {
         int row = 0;
         int solutionIndex = (p.length - 1) * 4;
         Arrays.sort(p);
         // initialize matrix
         BigDecimal[][] m = new BigDecimal[(p.length - 1) * 4][(p.length - 1) * 4 + 1]; // rows
-        for (int  i = 0; i < (p.length - 1) * 4; i++) {
+        for (int i = 0; i < (p.length - 1) * 4; i++) {
             for (int j = 0; j <= (p.length - 1) * 4; j++) {
                 m[i][j] = BigDecimal.ZERO; // fill with zeros
             }
@@ -92,7 +175,7 @@ public class SplineGenerator {
             coefficients[i] = reducedRowEchelonForm[i][reducedRowEchelonForm[i].length - 1];
         }
 
-        ArrayList<Point> path = new ArrayList<>();
+        ArrayList < Point > path = new ArrayList < > ();
         for (int i = 0; i < coefficients.length; i += 4) {
             for (double j = p[i / 4].xP; j <= p[(i / 4) + 1].xP; j += step) {
                 BigDecimal a = coefficients[i].multiply(BigDecimal.valueOf(j).pow(3, MathContext.DECIMAL64));
@@ -106,7 +189,39 @@ public class SplineGenerator {
         return path;
     }
 
-    public static BigDecimal [][] rref(BigDecimal[][] mat) {
+    public static ArrayList < Point > generateSplinePath(ArrayList < Point > l, double step) {
+        Point[] p = new Point[l.size()];
+        for (int i = 0; i < l.size(); i++) {
+            p[i] = l.get(i);
+        }
+        return generateSplinePath(p, step);
+    }
+
+
+    public static ArrayList < Point > generateLinearSpline(ArrayList < Point > pts) {
+        ArrayList < Point > wp = new ArrayList < > ();
+        for (int i = 0; i < pts.size() - 1; i++) {
+            double x1 = pts.get(i).xP, x2 = pts.get(i + 1).xP, y1 = pts.get(i).yP, y2 = pts.get(i + 1).yP;
+            double slope = (y2 - y1) / (x2 - x1);
+            if (pts.get(i).xP > pts.get(i + 1).xP) {
+                slope *= -1;
+                int stepCount = 0;
+                for (double j = x1; j >= x2; j--) {
+                    wp.add(new Point(j, y1 + (slope * stepCount)));
+                    stepCount++;
+                }
+            } else {
+                int stepCount = 0;
+                for (double j = x1; j <= x2; j++) {
+                    wp.add(new Point(j, y1 + (slope * stepCount)));
+                    stepCount++;
+                }
+            }
+        }
+        return wp;
+    }
+
+    public static BigDecimal[][] rref(BigDecimal[][] mat) {
         int lead = 0;
         for (int r = 0; r < mat.length; r++) {
             int i = r;
@@ -118,7 +233,7 @@ public class SplineGenerator {
                 }
             }
 
-            BigDecimal [] tmp = mat[i];
+            BigDecimal[] tmp = mat[i];
             mat[i] = mat[r];
             mat[r] = tmp;
 

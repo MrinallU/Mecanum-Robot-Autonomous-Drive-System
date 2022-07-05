@@ -34,4 +34,13 @@ public class Point implements Comparable<Point> {
         if (this.xP == o.xP) return 0;
         return 1;
     }
+
+    @Override
+    public String toString() {
+        return "Point{" +
+                "xP=" + xP +
+                ", yP=" + yP +
+                ", ang=" + ang +
+                '}';
+    }
 }
