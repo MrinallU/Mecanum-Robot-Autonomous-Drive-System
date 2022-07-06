@@ -1,15 +1,19 @@
 package org.firstinspires.ftc.teamcode.Mecanum_2.Modules;
 
+import org.firstinspires.ftc.teamcode.Utils.Angle;
 import org.firstinspires.ftc.teamcode.Utils.Point;
 
 public class Odometry {
     // Constants
-    private static final double TICKS_PER_ROTATION = 360 * 4; // CPR is 360 but 4 revolutions
-    private static final double WHEEL_CIRCUMFERENCE = 58 * Math.PI; // In mm
-    private static final double DISTANCE_PER_REVOLUTION = WHEEL_CIRCUMFERENCE / 25.4; // In inches
-    public static final double DISTANCE_PER_TICK = (DISTANCE_PER_REVOLUTION / TICKS_PER_ROTATION);
-    private static double DISTANCE_BETWEEN_WHEELS = 15.06; // In in
-    private static final double NORMAL_ENCODER_DRIFT = 0.001275;
+    public final double WHEEL_DIAMETER = 4;
+    public final double INTER_WHEEL_WIDTH = 16;
+    public final double INTER_WHEEL_LENGTH = 14;
+    public final double TICKS_PER_DRIVE_ROTATION = 1120;
+    public final double TICKS_PER_ENCODER_ROTATION = 1120;
+    public final double ENCODER_WHEEL_DIAMETER = 2;
+    private final double ENCODER_TICKS_PER_REVOLUTION = 1120;
+    private final double ENCODER_WHEEL_CIRCUMFERENCE = Math.PI * 2.0 * (ENCODER_WHEEL_DIAMETER * 0.5);
+    private final double ENCODER_WIDTH = 12.0;
 
     private boolean verbose = false;
     public String outStr = "";
@@ -34,48 +38,36 @@ public class Odometry {
         this(0);
     }
 
-    public void updatePosition(double r, double l, double n, double ang) {
-        double c = 11 * 2 * Math.PI;
-        double dL = l  - lastLeftEnc;
+    //https://github.com/Beta8397/virtual_robot/blob/master/TeamCode/src/org/firstinspires/ftc/teamcode/EncBot.java
+    public void updatePosition(double l, double r, double n, double ang) {
         double dR = r - lastRightEnc;
-        double dTheta = ((dR - dL) / DISTANCE_BETWEEN_WHEELS);
-        double dM = n - lastNormalEnc;
-        // double dM = n - lastNormalEnc - (c / (2 * Math.PI) * dTheta); // becuase the middle wheel is
-        // not free spinning you dont have to subtract c.
+        double dL = l - lastLeftEnc;
+        double dN = n - lastNormalEnc;
 
-        double dS = (dR + dL) / 2.0;
-        // double avgTheta = Math.toRadians(angle) + dTheta / 2.0;
-        double avgTheta = Math.toRadians(ang); // true angle from IMU
-        double dY = dS * Math.sin(avgTheta) - dM *
-                Math.cos(avgTheta);
-        double dX = dS * Math.cos(avgTheta) + dM *
-                Math.sin(avgTheta);
+        double rightDist = dR * ENCODER_WHEEL_CIRCUMFERENCE / ENCODER_TICKS_PER_REVOLUTION;
+        double leftDist = -dL * ENCODER_WHEEL_CIRCUMFERENCE / ENCODER_TICKS_PER_REVOLUTION;
+        double dyR = 0.5 * (rightDist + leftDist);
+        double headingChangeRadians = (rightDist - leftDist) / ENCODER_WIDTH;
+        double dxR = -dN * ENCODER_WHEEL_CIRCUMFERENCE / ENCODER_TICKS_PER_REVOLUTION;
+        double avgHeadingRadians = Math.toRadians(angle) + headingChangeRadians / 2.0;
+        double cos = Math.cos(avgHeadingRadians);
+        double sin = Math.sin(avgHeadingRadians);
 
-        xPos += dX;
-        yPos += dY;
-        angle = ang;
-        // angle += Math.toDegrees(dTheta);
-
+        xPos += dxR * sin + dyR * cos;
+        yPos += -dxR * cos + dyR * sin;
+        angle = Angle.normalize(ang);
+        lastNormalEnc = n;
         lastLeftEnc = l;
         lastRightEnc = r;
-        lastNormalEnc = n;
-
-        // Set string so values can be passed to telemetry
-        if(verbose){
-            outStr = "dLeft: " + format(dL) + "\ndRight: " + format(dR) + "\ndNormal: " + format(dM);
-        }
-        else{
-            outStr = "xPos: " + format(xPos) + "\nyPos: " + format(yPos) + "\nAngle: " + format(angle);
-        }
     }
 
     public double normalizeAngle(double rawAngle) {
         double scaledAngle = rawAngle % 360;
-        if ( scaledAngle < 0 ) {
+        if (scaledAngle < 0) {
             scaledAngle += 360;
         }
 
-        if ( scaledAngle > 180 ) {
+        if (scaledAngle > 180) {
             scaledAngle -= 360;
         }
 
@@ -98,29 +90,25 @@ public class Odometry {
         return yPos;
     }
 
-    public void resetOdometry(){
+    public void resetOdometry() {
         resetOdometry(0, 0, 0);
     }
 
-    public void resetOdometry(Point p){
+    public void resetOdometry(Point p) {
         resetOdometry(p.xP, p.yP, p.ang);
     }
 
-    public void resetOdometry(double xPos, double yPos, double angle){
+    public void resetOdometry(double xPos, double yPos, double angle) {
         this.xPos = xPos;
         this.yPos = yPos;
         this.angle = angle;
     }
 
-    public void addToDistBetweenWheels(double addDist) {
-        DISTANCE_BETWEEN_WHEELS += addDist;
-    }
-
-    public void setAngle(double angle){
+    public void setAngle(double angle) {
         this.angle = angle;
     }
 
-    private String format(double num){
+    private String format(double num) {
         return String.format("%.3f", num);
     }
 

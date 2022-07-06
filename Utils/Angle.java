@@ -22,6 +22,10 @@ public class Angle {
         return normalized_angle;
     }
 
+    public static double normalizeRadians(double theta){
+        return theta - (2*Math.PI) * Math.floor((theta + Math.PI) / (2*Math.PI));
+    }
+
     // Remaps the given angle into the range (-90, 90].
     public static double normalize_half(double degrees) {
         return Angle.normalize(2 * degrees) / 2;

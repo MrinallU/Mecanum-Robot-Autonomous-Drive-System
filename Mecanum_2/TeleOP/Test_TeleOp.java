@@ -1,13 +1,13 @@
 package org.firstinspires.ftc.teamcode.Mecanum_2.TeleOP;
-import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.teamcode.Mecanum_2.Base;
-import org.firstinspires.ftc.teamcode.Utils.Angle;
 
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.Mecanum_2.Base;
+@TeleOp(name = "Test_TeleOp", group = "OdomBot")
 public class Test_TeleOp extends Base {
 
     // TeleOp Variables
-    ElapsedTime matchTime;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -17,19 +17,15 @@ public class Test_TeleOp extends Base {
 
         waitForStart();
         matchTime.reset();
-        resetCache();
         dt.updateOdometry();
+        targetAngle = dt.getAngle() - 90;
 
         while (opModeIsActive()) {
             // Updates
-            resetCache();
+            dt.resetCache();
             dt.updateOdometry();
 
-            // Reset Angle
             currAngle = dt.getAngle();
-            if (gamepad1.x) {
-                targetAngle = -currAngle - 180;
-            }
 
             // Change Drive Mode
             yLP = yP;
@@ -41,15 +37,14 @@ public class Test_TeleOp extends Base {
             // Drive
             slowDrive = gamepad1.left_bumper;
             fastDrive = gamepad1.left_trigger > 0.05;
-            drive = floor(gamepad1.right_stick_y) * multiplier;
-            strafe = floor(-gamepad1.right_stick_x) * multiplier;
-            turn = turnFloor(gamepad1.left_stick_x) * multiplier;
+            drive = floor(gamepad1.right_stick_y);
+            strafe = floor(-gamepad1.right_stick_x);
+            turn = turnFloor(gamepad1.left_stick_x);
             computeDrivePowers(gamepad1);
-
 
             // Display Values
             telemetry.addData("Drive Type", driveType);
-            telemetry.addData("Odometry Info", odometry.outStr);
+            telemetry.addData("Odometry Info", dt.getCurrentPosition());
             telemetry.update();
         }
     }

@@ -37,6 +37,7 @@ public class Motor {
     public void setDirection(DcMotorSimple.Direction d){
         motor.setDirection(d);
     }
+    public DcMotorSimple.Direction getDir(){return motor.getDirection();}
 
     public void coast(){
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);

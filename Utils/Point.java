@@ -37,10 +37,10 @@ public class Point implements Comparable<Point> {
 
     @Override
     public String toString() {
-        return "Point{" +
+        return "{" +
                 "xP=" + xP +
-                ", yP=" + yP +
-                ", ang=" + ang +
+                "\n, yP=" + yP +
+                "\n, ang=" + ang +
                 '}';
     }
 }

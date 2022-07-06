@@ -23,12 +23,10 @@ public class PathGenerator {
         }
 
         for (int i = 0; i < pts.size(); i++) {
-            System.out.println(cur + " " + incX);
             if (!none) {
                 if (incX) {
                     // test for conflicting
                     if (!(pts.get(i).xP > prev.xP)) {
-                        System.out.println(cur + " " + pts.get(i));
                         wp.addAll(generateSplinePath(cur, 0.5));
                         cur.clear();
                         none = true;
@@ -55,7 +53,6 @@ public class PathGenerator {
 
             if (none) {
                 cur.add(pts.get(i));
-                System.out.println(cur);
                 if (cur.get(0).xP < cur.get(1).xP) {
                     incX = true;
                     none = false;
@@ -79,7 +76,6 @@ public class PathGenerator {
                     )
             )));
         } else if (cur.size() > 1) {
-            System.out.println(cur);
             ArrayList < Point > p = generateSplinePath(cur, 0.5);
             if (!incX) {
                 Collections.reverse(p);
@@ -87,8 +83,6 @@ public class PathGenerator {
             wp.addAll(p);
         }
 
-        System.out.println(wp.size());
-        System.out.println(wp);
         return wp;
     }
 
@@ -151,7 +145,6 @@ public class PathGenerator {
 
         }
 
-
         // second derivative
         for (int functionNr = 0; functionNr < p.length - 2; functionNr++, row++) {
             Point p1 = p[functionNr + 1];
@@ -161,13 +154,11 @@ public class PathGenerator {
             m[row][functionNr * 4 + 5] = new BigDecimal(-2, MathContext.DECIMAL64);
         }
 
-
         // check these calculations later
         m[row][0] = new BigDecimal(6, MathContext.DECIMAL64).multiply(new BigDecimal(p[0].xP, MathContext.DECIMAL64), MathContext.DECIMAL64);
         m[row++][1] = new BigDecimal(2, MathContext.DECIMAL64);
         m[row][solutionIndex - 4] = new BigDecimal(6, MathContext.DECIMAL64).multiply(new BigDecimal(p[p.length - 1].xP, MathContext.DECIMAL64), MathContext.DECIMAL64);
         m[row][solutionIndex - 4 + 1] = new BigDecimal(2, MathContext.DECIMAL64);
-
 
         BigDecimal[][] reducedRowEchelonForm = rref(m);
         BigDecimal[] coefficients = new BigDecimal[reducedRowEchelonForm.length];
@@ -197,11 +188,23 @@ public class PathGenerator {
         return generateSplinePath(p, step);
     }
 
-
     public static ArrayList < Point > generateLinearSpline(ArrayList < Point > pts) {
         ArrayList < Point > wp = new ArrayList < > ();
         for (int i = 0; i < pts.size() - 1; i++) {
             double x1 = pts.get(i).xP, x2 = pts.get(i + 1).xP, y1 = pts.get(i).yP, y2 = pts.get(i + 1).yP;
+            if (x1 == x2) {
+                if (y1 < y2) {
+                    for (double j = y1; j <= y2; j++) {
+                        wp.add(new Point(x1, j));
+                    }
+                } else {
+                    for (double j = y1; j >= y2; j--) {
+                        wp.add(new Point(x1, j));
+                    }
+                }
+                continue;
+            }
+
             double slope = (y2 - y1) / (x2 - x1);
             if (pts.get(i).xP > pts.get(i + 1).xP) {
                 slope *= -1;
