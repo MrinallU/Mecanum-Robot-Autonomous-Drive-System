@@ -30,19 +30,19 @@ public class Drive extends Base {
   protected List<LynxModule> allHubs;
 
   public Drive(
-          Motor fLeftMotor,
-          Motor bLeftMotor,
-          Motor fRightMotor,
-          Motor bRightMotor,
-          Motor odoL,
-          Motor odoR,
-          Motor odoN,
-          BNO055IMU gyro,
-          OpMode m,
-          int xPos,
-          int yPos,
-          int angle,
-          List<LynxModule> allHubs) {
+      Motor fLeftMotor,
+      Motor bLeftMotor,
+      Motor fRightMotor,
+      Motor bRightMotor,
+      Motor odoL,
+      Motor odoR,
+      Motor odoN,
+      BNO055IMU gyro,
+      OpMode m,
+      int xPos,
+      int yPos,
+      int angle,
+      List<LynxModule> allHubs) {
 
     this.fLeftMotor = fLeftMotor;
     this.fRightMotor = fRightMotor;
@@ -58,24 +58,24 @@ public class Drive extends Base {
   }
 
   public void traversePath(
-          ArrayList<Point> wp,
-          double heading,
-          double driveSpeedCap,
-          boolean limitPower,
-          double powerLowerBound,
-          double xError,
-          double yError,
-          double angleError,
-          int lookAheadDist,
-          double timeout) {
+      ArrayList<Point> wp,
+      double heading,
+      double driveSpeedCap,
+      boolean limitPower,
+      double powerLowerBound,
+      double xError,
+      double yError,
+      double angleError,
+      int lookAheadDist,
+      double timeout) {
     ElapsedTime time = new ElapsedTime();
     int lastLhInd = 0;
     time.reset();
     while ((lastLhInd < wp.size() - 1
             || (Math.abs(odometry.getX() - wp.get(wp.size() - 1).xP) > xError
-            || Math.abs(odometry.getY() - wp.get(wp.size() - 1).yP) > yError
-            || Math.abs(heading - odometry.getAngle()) > angleError))
-            && time.milliseconds() < timeout) {
+                || Math.abs(odometry.getY() - wp.get(wp.size() - 1).yP) > yError
+                || Math.abs(heading - odometry.getAngle()) > angleError))
+        && time.milliseconds() < timeout) {
       resetCache();
       updateOdometry();
       double x = odometry.getX();
@@ -89,9 +89,9 @@ public class Drive extends Base {
       for (Point p : wp) {
         double ptDist = getRobotDistanceFromPoint(p);
         if (Math.abs(ptDist) <= lookAheadDist
-                && i > lastLhInd
-                && Math.abs(ptDist) > maxDist
-                && Math.abs(i - lastLhInd) < 5) {
+            && i > lastLhInd
+            && Math.abs(ptDist) > maxDist
+            && Math.abs(i - lastLhInd) < 5) {
           nxtP = p;
           possInd = i;
           maxDist = Math.abs(ptDist);
@@ -124,13 +124,13 @@ public class Drive extends Base {
 
       double dist = getRobotDistanceFromPoint(nxtP); // mtp 2.0
       double relAngToP =
-              Angle.normalizeRadians(
-                      splineAngle - (Math.toRadians(theta) - Math.toRadians(90))); // mtp 2.0
+          Angle.normalizeRadians(
+              splineAngle - (Math.toRadians(theta) - Math.toRadians(90))); // mtp 2.0
       double relX = Math.sin(relAngToP) * dist, relY = Math.cos(relAngToP) * dist;
       double xPow = (relX / (Math.abs(relY) + Math.abs(relX))) * driveSpeedCap,
-              yPow = (relY / (Math.abs(relX) + Math.abs(relY))) * driveSpeedCap;
+          yPow = (relY / (Math.abs(relX) + Math.abs(relY))) * driveSpeedCap;
 
-      if(limitPower) {
+      if (limitPower) {
         if (yPow < 0) {
           yPow = Math.min(-powerLowerBound, yPow);
         } else {
@@ -150,38 +150,47 @@ public class Drive extends Base {
   }
 
   public void traversePath(
-          ArrayList<Point> wp,
-          double heading,
-          double driveSpeedCap,
-          double powLb,
-          double xError,
-          double yError,
-          double angleError,
-          int lookAheadDist,
-          double timeout) {
-    traversePath(wp, heading, driveSpeedCap, true, powLb, xError, yError, angleError, lookAheadDist, timeout);
+      ArrayList<Point> wp,
+      double heading,
+      double driveSpeedCap,
+      double powLb,
+      double xError,
+      double yError,
+      double angleError,
+      int lookAheadDist,
+      double timeout) {
+    traversePath(
+        wp,
+        heading,
+        driveSpeedCap,
+        true,
+        powLb,
+        xError,
+        yError,
+        angleError,
+        lookAheadDist,
+        timeout);
   }
 
   public void traversePath(
-          ArrayList<Point> wp,
-          double heading,
-          double xError,
-          double yError,
-          double angleError,
-          int lookAheadDist,
-          double timeout) {
+      ArrayList<Point> wp,
+      double heading,
+      double xError,
+      double yError,
+      double angleError,
+      int lookAheadDist,
+      double timeout) {
     traversePath(wp, heading, 1, false, -1, xError, yError, angleError, lookAheadDist, timeout);
   }
 
-
   public void moveToPosition(
-          double targetXPos,
-          double targetYPos,
-          double targetAngle,
-          double xAccuracy,
-          double yAccuracy,
-          double angleAccuracy,
-          double timeout) {
+      double targetXPos,
+      double targetYPos,
+      double targetAngle,
+      double xAccuracy,
+      double yAccuracy,
+      double angleAccuracy,
+      double timeout) {
     ArrayList<Point> pt = new ArrayList<>();
     pt.add(getCurrentPosition());
     pt.add(new Point(targetXPos, targetYPos));
@@ -194,8 +203,8 @@ public class Drive extends Base {
     double currAngle = getAngle();
     ElapsedTime time = new ElapsedTime();
     while (Math.abs(currAngle - targetAngle) > minDifference
-            && time.milliseconds() < timeout
-            && ((LinearOpMode) opMode).opModeIsActive()) {
+        && time.milliseconds() < timeout
+        && ((LinearOpMode) opMode).opModeIsActive()) {
       resetCache();
       updateOdometry();
       currAngle = getAngle();
@@ -210,7 +219,7 @@ public class Drive extends Base {
   // Positional Data
   public void updateOdometry() {
     odometry.updatePosition(
-            odoL.encoderReading(), odoR.encoderReading(), odoN.encoderReading(), getAngle());
+        odoL.encoderReading(), odoR.encoderReading(), odoN.encoderReading(), getAngle());
   }
 
   public Point getCurrentPosition() {
@@ -220,8 +229,8 @@ public class Drive extends Base {
 
   public double getAngle() {
     Orientation angles =
-            gyro.getAngularOrientation(
-                    AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES); // ZYX is Original
+        gyro.getAngularOrientation(
+            AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES); // ZYX is Original
     return Angle.normalize(angles.firstAngle + initAng);
   }
 
@@ -235,9 +244,9 @@ public class Drive extends Base {
     double fRightAngle = Math.toRadians(baseAngle + 315);
 
     fRightPow =
-            (drive * Math.sin(fRightAngle) + strafe * Math.cos(fRightAngle)) / Math.sqrt(1) + turn;
+        (drive * Math.sin(fRightAngle) + strafe * Math.cos(fRightAngle)) / Math.sqrt(1) + turn;
     bRightPow =
-            (drive * Math.sin(bRightAngle) + strafe * Math.cos(bRightAngle)) / Math.sqrt(1) + turn;
+        (drive * Math.sin(bRightAngle) + strafe * Math.cos(bRightAngle)) / Math.sqrt(1) + turn;
     fLeftPow = (drive * Math.sin(fLeftAngle) + strafe * Math.cos(fLeftAngle)) / Math.sqrt(1) + turn;
     bLeftPow = (drive * Math.sin(bLeftAngle) + strafe * Math.cos(bLeftAngle)) / Math.sqrt(1) + turn;
 
@@ -279,11 +288,11 @@ public class Drive extends Base {
   }
 
   public double[] scalePowers(
-          double bLeftPow, double fLeftPow, double bRightPow, double fRightPow) {
+      double bLeftPow, double fLeftPow, double bRightPow, double fRightPow) {
     double maxPow =
-            Math.max(
-                    Math.max(Math.abs(fLeftPow), Math.abs(bLeftPow)),
-                    Math.max(Math.abs(fRightPow), Math.abs(bRightPow)));
+        Math.max(
+            Math.max(Math.abs(fLeftPow), Math.abs(bLeftPow)),
+            Math.max(Math.abs(fRightPow), Math.abs(bRightPow)));
     if (maxPow > 1) {
       fLeftPow /= maxPow;
       bLeftPow /= maxPow;
@@ -298,8 +307,8 @@ public class Drive extends Base {
 
   public double getRobotDistanceFromPoint(Point p2) {
     return Math.sqrt(
-            (p2.yP - odometry.getY()) * (p2.yP - odometry.getY())
-                    + (p2.xP - odometry.getX()) * (p2.xP - odometry.getX()));
+        (p2.yP - odometry.getY()) * (p2.yP - odometry.getY())
+            + (p2.xP - odometry.getX()) * (p2.xP - odometry.getX()));
   }
 
   // BULK-READING FUNCTIONS
@@ -310,14 +319,14 @@ public class Drive extends Base {
     }
   }
 
-//    private double getVoltage() {
-//        double voltage = Double.MIN_VALUE;
-//        for (LynxModule hub : allHubs) {
-//            voltage = Math.max(voltage, hub.getInputVoltage(VoltageUnit.VOLTS));
-//        }
-//
-//        return voltage;
-//    }
+  //    private double getVoltage() {
+  //        double voltage = Double.MIN_VALUE;
+  //        for (LynxModule hub : allHubs) {
+  //            voltage = Math.max(voltage, hub.getInputVoltage(VoltageUnit.VOLTS));
+  //        }
+  //
+  //        return voltage;
+  //    }
 
   @Override
   public void runOpMode() throws InterruptedException {}

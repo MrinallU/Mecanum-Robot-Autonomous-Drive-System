@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Mecanum_2.Modules.Drive;
-import org.firstinspires.ftc.teamcode.Mecanum_2.Modules.Odometry;
 import org.firstinspires.ftc.teamcode.Utils.Angle;
 import org.firstinspires.ftc.teamcode.Utils.Motor;
 import org.firstinspires.ftc.teamcode.Utils.Point;
@@ -24,7 +23,6 @@ public abstract class Base extends LinearOpMode {
   // Sleep Times
   public ElapsedTime matchTime = new ElapsedTime();
 
-
   // Gyro and Angles
   public BNO055IMU gyro;
 
@@ -32,8 +30,8 @@ public abstract class Base extends LinearOpMode {
 
   // Constants and Conversions
   public double targetAngle, currAngle, drive, turn, strafe, multiplier = 1;
-  public double initAng=0;     public String driveType;
-
+  public double initAng = 0;
+  public String driveType;
 
   // Positions and Bounds
   public double dpadTurnSpeed = 0.175, dpadDriveSpeed = 0.2;
@@ -46,23 +44,22 @@ public abstract class Base extends LinearOpMode {
   public boolean yP2 = false, yLP2 = false;
   public boolean rSP2 = false, rSLP2 = false;
   public boolean bP2 = false, bLP2 = false;
-
-  public boolean slowDrive = false, fastDrive=false;
+  public boolean slowDrive = false, fastDrive = false;
   public boolean basicDrive = false;
 
   public void initHardware(int angle, OpMode m) throws InterruptedException {
-    initHardware(0, 0, angle, m); initAng = angle;
+    initHardware(0, 0, angle, m);
+    initAng = angle;
   }
 
-  public void initHardware(int xPos, int yPos, int angle, OpMode m) throws InterruptedException{
+  public void initHardware(int xPos, int yPos, int angle, OpMode m) throws InterruptedException {
     // Hubs
     List<LynxModule> allHubs;
     allHubs = hardwareMap.getAll(LynxModule.class);
 
-    for(LynxModule hub : allHubs){
+    for (LynxModule hub : allHubs) {
       hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
     }
-
 
     // Motors
     Motor fLeftMotor = new Motor(hardwareMap, "front_left_motor");
@@ -81,97 +78,169 @@ public abstract class Base extends LinearOpMode {
 
     // Servo
 
-    //Gyro
+    // Gyro
     BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-    parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-    parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-    parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-    parameters.loggingEnabled      = true;
-    parameters.loggingTag          = "IMU";
+    parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+    parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+    parameters.calibrationDataFile =
+        "BNO055IMUCalibration.json"; // see the calibration sample opmode
+    parameters.loggingEnabled = true;
+    parameters.loggingTag = "IMU";
     parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
     gyro = hardwareMap.get(BNO055IMU.class, "imu");
     gyro.initialize(parameters);
 
     // Modules
-    dt = new Drive(fLeftMotor, bLeftMotor, fRightMotor, bRightMotor
-            , odoL, odoR, odoN, gyro, m, xPos, yPos, angle, allHubs);
+    dt =
+        new Drive(
+            fLeftMotor,
+            bLeftMotor,
+            fRightMotor,
+            bRightMotor,
+            odoL,
+            odoR,
+            odoN,
+            gyro,
+            m,
+            xPos,
+            yPos,
+            angle,
+            allHubs);
 
     initServos();
 
     // reset constants
-    targetAngle =  currAngle = drive = turn = strafe = multiplier = 1;
-    dpadTurnSpeed = 0.175; dpadDriveSpeed = 0.2; initAng = angle;
-    yP = false; yLP = false;
-    aP = false;  aLP = false;
-    rP2 = false;  rLP2 = false;
-    lP2 = false;  lLP2 = false;
-    yP2 = false;  yLP2 = false;
-    rSP2 = false;  rSLP2 = false;
-    bP2 = false;  bLP2 = false;
-    slowDrive = false; fastDrive=false;
+    targetAngle = currAngle = drive = turn = strafe = multiplier = 1;
+    dpadTurnSpeed = 0.175;
+    dpadDriveSpeed = 0.2;
+    initAng = angle;
+    yP = false;
+    yLP = false;
+    aP = false;
+    aLP = false;
+    rP2 = false;
+    rLP2 = false;
+    lP2 = false;
+    lLP2 = false;
+    yP2 = false;
+    yLP2 = false;
+    rSP2 = false;
+    rSLP2 = false;
+    bP2 = false;
+    bLP2 = false;
+    slowDrive = false;
+    fastDrive = false;
     basicDrive = false;
   }
 
-  public void initHardware(OpMode m) throws InterruptedException{
+  public void initHardware(OpMode m) throws InterruptedException {
     initHardware(0, m);
   }
 
-  public void initServos(){
+  public void initServos() {}
 
-  }
-
-
-  // Autonomous Movement (Note that you do not have to insert the current position into any of the weighpoints)
-  public void SplinePathConstantHeading(ArrayList<Point> pts, double heading, double driveSpeedCap, double xError,
-                                        double yError, double angleError, int lookAheadDist, double timeout){
+  // Autonomous Movement (Note that you do not have to insert the current position into any of the
+  // weighpoints)
+  public void SplinePathConstantHeading(
+      ArrayList<Point> pts,
+      double heading,
+      double driveSpeedCap,
+      double xError,
+      double yError,
+      double angleError,
+      int lookAheadDist,
+      double timeout) {
     Point curLoc = dt.getCurrentPosition();
-    ArrayList<Point> wps = PathGenerator.interpSplinePath(pts,  curLoc);
-    dt.traversePath(wps, heading , driveSpeedCap, false, -1, xError, yError, angleError, lookAheadDist, timeout);
+    ArrayList<Point> wps = PathGenerator.interpSplinePath(pts, curLoc);
+    dt.traversePath(
+        wps, heading, driveSpeedCap, false, -1, xError, yError, angleError, lookAheadDist, timeout);
   }
 
-  public void SplinePathConstantHeading(ArrayList<Point> pts, double heading, double driveSpeedCap, double powLb, double xError,
-                                        double yError, double angleError, int lookAheadDist, double timeout){
+  public void SplinePathConstantHeading(
+      ArrayList<Point> pts,
+      double heading,
+      double driveSpeedCap,
+      double powLb,
+      double xError,
+      double yError,
+      double angleError,
+      int lookAheadDist,
+      double timeout) {
     Point curLoc = dt.getCurrentPosition();
-    ArrayList<Point> wps = PathGenerator.interpSplinePath(pts,  curLoc);
-    dt.traversePath(wps, heading , driveSpeedCap, true, powLb, xError, yError, angleError, lookAheadDist, timeout);
+    ArrayList<Point> wps = PathGenerator.interpSplinePath(pts, curLoc);
+    dt.traversePath(
+        wps,
+        heading,
+        driveSpeedCap,
+        true,
+        powLb,
+        xError,
+        yError,
+        angleError,
+        lookAheadDist,
+        timeout);
   }
 
-
-  public void LinearPathConstantHeading(ArrayList<Point> pts, double heading, double driveSpeedCap, double powLb, double xError,
-                                        double yError, double angleError, int lookAheadDist, double timeout)  {
+  public void LinearPathConstantHeading(
+      ArrayList<Point> pts,
+      double heading,
+      double driveSpeedCap,
+      double powLb,
+      double xError,
+      double yError,
+      double angleError,
+      int lookAheadDist,
+      double timeout) {
     Point curLoc = dt.getCurrentPosition();
     ArrayList<Point> wps = new ArrayList<>();
     wps.add(curLoc);
     wps.addAll(pts);
     wps = PathGenerator.generateLinearSpline(wps);
-    dt.traversePath(wps, heading, driveSpeedCap, powLb, xError, yError, angleError, lookAheadDist, timeout);
+    dt.traversePath(
+        wps, heading, driveSpeedCap, powLb, xError, yError, angleError, lookAheadDist, timeout);
   }
 
+  public void turnTo(double targetAngle, long timeout, double powerCap, double minDifference) {
+    dt.turnTo(targetAngle, timeout, powerCap, minDifference);
+  }
 
-  public void turnTo(double targetAngle, long timeout, double powerCap, double minDifference){ dt.turnTo(targetAngle, timeout, powerCap, minDifference); }
+  public void turnTo(double targetAngle, long timeout, double powerCap) {
+    dt.turnTo(targetAngle, timeout, powerCap, 2);
+  }
 
-  public void turnTo(double targetAngle, long timeout, double powerCap){ dt.turnTo(targetAngle, timeout, powerCap, 2); }
-
-  public void turnTo(double targetAngle, long timeout){
+  public void turnTo(double targetAngle, long timeout) {
     turnTo(targetAngle, timeout, 0.7);
   }
 
-
-  public void moveToPosition(double targetXPos, double targetYPos, double targetAngle, double posAccuracy, double angleAccuracy, double timeout) {
-    dt.moveToPosition(targetXPos, targetYPos, targetAngle, posAccuracy, posAccuracy, angleAccuracy, timeout);
+  public void moveToPosition(
+      double targetXPos,
+      double targetYPos,
+      double targetAngle,
+      double posAccuracy,
+      double angleAccuracy,
+      double timeout) {
+    dt.moveToPosition(
+        targetXPos, targetYPos, targetAngle, posAccuracy, posAccuracy, angleAccuracy, timeout);
   }
 
-  public void moveToPosition(double targetXPos, double targetYPos, double targetAngle, double timeout) {
+  public void moveToPosition(
+      double targetXPos, double targetYPos, double targetAngle, double timeout) {
     moveToPosition(targetXPos, targetYPos, targetAngle, 2, 2, timeout);
   }
 
-  public void moveToPosition(double targetXPos, double targetYPos, double targetAngle, double posAccuracy, double timeout) {
+  public void moveToPosition(
+      double targetXPos,
+      double targetYPos,
+      double targetAngle,
+      double posAccuracy,
+      double timeout) {
     moveToPosition(targetXPos, targetYPos, targetAngle, posAccuracy, 2, timeout);
   }
 
   // Function implementing Points
-  public void moveToPosition(Point p, double xAccuracy, double yAccuracy, double angleAccuracy, double timeout){
+  public void moveToPosition(
+      Point p, double xAccuracy, double yAccuracy, double angleAccuracy, double timeout) {
     dt.moveToPosition(p.xP, p.yP, p.ang, xAccuracy, yAccuracy, angleAccuracy, timeout);
   }
 
@@ -188,7 +257,7 @@ public abstract class Base extends LinearOpMode {
   }
 
   // Driver Controlled Movemement
-  public void computeDrivePowers(Gamepad gamepad){
+  public void computeDrivePowers(Gamepad gamepad) {
     if (basicDrive) {
       driveType = "Robot Centric";
 
@@ -197,8 +266,11 @@ public abstract class Base extends LinearOpMode {
       } else if (gamepad.dpad_left) {
         dt.driveRobotCentric(0, -dpadTurnSpeed, 0);
       } else if (gamepad.dpad_up) {
-        dt.driveFieldCentric(targetAngle + currAngle, 0, 0.01 *
-                Angle.angleDifference(currAngle, targetAngle + 90), 0);
+        dt.driveFieldCentric(
+            targetAngle + currAngle,
+            0,
+            0.01 * Angle.angleDifference(currAngle, targetAngle + 90),
+            0);
       } else {
         dt.driveRobotCentric(drive, turn, strafe);
       }
@@ -220,15 +292,14 @@ public abstract class Base extends LinearOpMode {
   }
 
   // Misc Utility Functions
-  public String formatDegrees(double degrees){
+  public String formatDegrees(double degrees) {
     return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
   }
 
   public double floor(double rawInput) {
-    if(slowDrive){
+    if (slowDrive) {
       return ((int) (rawInput * 5.5)) / 11.0;
-    }
-    else if(fastDrive){
+    } else if (fastDrive) {
       return rawInput;
     }
     return ((int) (rawInput * 9)) / 11.0;
@@ -238,14 +309,13 @@ public abstract class Base extends LinearOpMode {
     return ((int) (rawInput * 15)) / 20.0;
   }
 
-
   public String formatAngle(AngleUnit angleUnit, double angle) {
     return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
   }
 
   // Other Functions
-  public double normalizeThreeDigits(double d){
-    return (int)(d * 1000) / 1000.;
+  public double normalizeThreeDigits(double d) {
+    return (int) (d * 1000) / 1000.;
   }
 
   @Override
