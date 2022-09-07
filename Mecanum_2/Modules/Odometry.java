@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Mecanum_2.Modules;
 import org.firstinspires.ftc.teamcode.Utils.Angle;
 import org.firstinspires.ftc.teamcode.Utils.Point;
 
-
 public class Odometry {
   // Constants
   public final double WHEEL_DIAMETER = 4;
