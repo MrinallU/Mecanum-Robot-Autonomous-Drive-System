@@ -1,33 +1,33 @@
-package org.firstinspires.ftc.teamcode.Mecanum_2.Modules;
+package org.firstinspires.ftc.teamcode.NewRobot.Modules;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
-
+import java.util.ArrayList;
+import java.util.List;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.Mecanum_2.Base;
-import org.firstinspires.ftc.teamcode.Mecanum_2.PathGenerator;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.T2_2022.Base;
 import org.firstinspires.ftc.teamcode.Utils.Angle;
 import org.firstinspires.ftc.teamcode.Utils.Motor;
 import org.firstinspires.ftc.teamcode.Utils.Point;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Drive extends Base {
 
   protected Motor fLeftMotor, bLeftMotor, fRightMotor, bRightMotor;
-  protected Motor odoR, odoL, odoN;
-  protected BNO055IMU gyro;
+  protected Motor odoL, odoN;
+  protected SlideSystem slideSystem;
+  protected IMU gyro;
   protected Odometry odometry;
   protected OpMode opMode;
   protected List<LynxModule> allHubs;
+
+  Telemetry output;
+  public boolean raise1 = false, raise2 = false, dropSlides3 = false, dropSlides4 = false;
 
   public Drive(
       Motor fLeftMotor,
@@ -35,38 +35,143 @@ public class Drive extends Base {
       Motor fRightMotor,
       Motor bRightMotor,
       Motor odoL,
-      Motor odoR,
       Motor odoN,
-      BNO055IMU gyro,
+      IMU gyro,
       OpMode m,
       int xPos,
       int yPos,
       int angle,
-      List<LynxModule> allHubs) {
-
+      List<LynxModule> allHubs,
+      Telemetry t,
+      SlideSystem slideSystem) {
     this.fLeftMotor = fLeftMotor;
     this.fRightMotor = fRightMotor;
     this.bLeftMotor = bLeftMotor;
     this.bRightMotor = bRightMotor;
     this.odoL = odoL;
-    this.odoR = odoR;
     this.odoN = odoN;
     this.gyro = gyro;
     this.opMode = m;
     this.allHubs = allHubs;
+    this.output = t;
+    this.slideSystem = slideSystem;
     odometry = new Odometry(xPos, yPos, angle);
+  }
+
+  // Very similar to the carrot chasing algo (https://arxiv.org/abs/2012.13227)
+  public void ChaseTheCarrot(
+      ArrayList<Point> wp,
+      double switchTolerance,
+      double heading,
+      double error,
+      double angleError,
+      double normalMovementConstant,
+      double finalMovementConstant,
+      double turnConstant,
+      double maxSpeed,
+      double movementD,
+      double turnD,
+      double timeout) {
+    ElapsedTime time = new ElapsedTime();
+    double prevTime = 0, prevXDiff = 0, prevYDiff = 0, prevAngleDiff = 0, dx, dy, dtheta;
+    int pt = 0;
+    time.reset();
+    while ((pt < wp.size() - 1
+            || (Math.abs(getX() - wp.get(wp.size() - 1).xP) > error
+                || Math.abs(getY() - wp.get(wp.size() - 1).yP) > error
+                || (heading == Double.MAX_VALUE
+                    ? Math.abs(wp.get(wp.size() - 1).ang - odometry.getAngle()) > angleError
+                    : Math.abs(heading - odometry.getAngle()) > angleError)))
+        && time.milliseconds() < timeout) {
+      update();
+      double x = getX();
+      double y = getY();
+      double theta = odometry.getAngle();
+      if (raise1 && time.milliseconds() > 2500) {
+        slideSystem.extendVerticalSlides();
+      }
+      if (raise2 && time.milliseconds() > 1000) {
+        slideSystem.extendVerticalSlides();
+      }
+      Point destPt;
+      while (getRobotDistanceFromPoint(wp.get(pt)) <= switchTolerance
+          && pt != wp.size() - 1
+          && time.milliseconds() <= timeout) {
+        update();
+        pt++;
+        x = getX();
+        y = getY();
+        prevXDiff = 0;
+        prevYDiff = 0;
+        prevAngleDiff = 0;
+      }
+
+      /*
+            splineAngle = Math.atan2(yDiff, xDiff);
+            double dist = getRobotDistanceFromPoint(nxtP); // mtp 2.0
+      double relAngToP =
+          Angle.normalizeRadians(
+              splineAngle - (Math.toRadians(theta) - Math.toRadians(90))); // mtp 2.0
+      double relX = Math.sin(relAngToP) * dist, relY = Math.cos(relAngToP) * dist;
+      double xPow = (relX / (Math.abs(relY) + Math.abs(relX))) * driveSpeedCap,
+          yPow = (relY / (Math.abs(relX) + Math.abs(relY))) * driveSpeedCap;
+       */
+      destPt = wp.get(pt);
+      double xDiff = destPt.xP - x;
+      double yDiff = destPt.yP - y;
+      double angleDiff =
+          heading == Double.MAX_VALUE ? wp.get(pt).ang - odometry.getAngle() : heading - theta;
+
+      double xPow = 0, yPow = 0, turnPow = 0;
+      xPow += movementD * (xDiff - prevXDiff) / (time.seconds() - prevTime);
+      yPow += movementD * (yDiff - prevYDiff) / (time.seconds() - prevTime);
+      turnPow += turnD * (angleDiff - prevAngleDiff) / (time.seconds() - prevTime);
+
+      turnPow += angleDiff * turnConstant;
+      if (pt == wp.size() - 1) {
+        xPow += xDiff * finalMovementConstant;
+        yPow += yDiff * finalMovementConstant;
+      } else {
+        xPow += xDiff * normalMovementConstant;
+        yPow += yDiff * normalMovementConstant;
+      }
+
+      if (xPow < 0) {
+        if (xPow < -maxSpeed) {
+          xPow = -maxSpeed;
+        }
+      } else {
+        if (xPow > maxSpeed) {
+          xPow = maxSpeed;
+        }
+      }
+
+      if (yPow < 0) {
+        if (yPow < -maxSpeed) {
+          yPow = -maxSpeed;
+        }
+      } else {
+        if (yPow > maxSpeed) {
+          yPow = maxSpeed;
+        }
+      }
+
+      prevTime = time.seconds();
+      prevXDiff = xDiff;
+      prevYDiff = yDiff;
+      prevAngleDiff = angleDiff;
+      driveFieldCentricAuto(-yPow, -turnPow, xPow);
+    }
+
+    stopDrive();
   }
 
   // Kinda Like:
   // https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
-  // Helpful explanation:
-  // https://www.chiefdelphi.com/t/paper-implementation-of-the-adaptive-pure-pursuit-controller/166552
   public void traversePath(
       ArrayList<Point> wp,
       double heading,
       double driveSpeedCap,
-      boolean limitPower,
-      double powerLowerBound,
       double xError,
       double yError,
       double angleError,
@@ -76,26 +181,27 @@ public class Drive extends Base {
     int lastLhInd = 0;
     time.reset();
     while ((lastLhInd < wp.size() - 1
-            || (Math.abs(odometry.getX() - wp.get(wp.size() - 1).xP) > xError
-                || Math.abs(odometry.getY() - wp.get(wp.size() - 1).yP) > yError
-                || Math.abs(heading - odometry.getAngle()) > angleError))
+            || (Math.abs(getX() - wp.get(wp.size() - 1).xP) > xError
+                || Math.abs(getY() - wp.get(wp.size() - 1).yP) > yError
+                || (heading == Double.MAX_VALUE
+                    ? Math.abs(wp.get(wp.size() - 1).ang - getAngleImu()) > angleError
+                    : Math.abs(heading - getAngleImu()) > angleError)))
         && time.milliseconds() < timeout) {
       resetCache();
-      updateOdometry();
-      double x = odometry.getX();
-      double y = odometry.getY();
-      double theta = odometry.getAngle();
+      updatePosition();
+      double x = getX();
+      double y = getY();
+      double theta = getAngleImu();
 
       // find point which fits the look ahead criteria
       Point nxtP = null;
       int i = 0, cnt = 0, possInd = -1;
       double maxDist = -1;
-      for (Point p : wp) {
+
+      for (int j = lastLhInd; j < wp.size(); j++) {
+        Point p = wp.get(j);
         double ptDist = getRobotDistanceFromPoint(p);
-        if (Math.abs(ptDist) <= lookAheadDist
-            && i > lastLhInd
-            && Math.abs(ptDist) > maxDist
-            && Math.abs(i - lastLhInd) < 5) {
+        if (Math.abs(ptDist) <= lookAheadDist && i > lastLhInd && Math.abs(ptDist) > maxDist) {
           nxtP = p;
           possInd = i;
           maxDist = Math.abs(ptDist);
@@ -119,7 +225,7 @@ public class Drive extends Base {
 
       splineAngle = Math.atan2(yDiff, xDiff);
       if (heading == Double.MAX_VALUE) {
-        angDiff = theta - Angle.normalize(Math.toDegrees(splineAngle));
+        angDiff = theta - nxtP.ang;
       } else {
         angDiff = theta - heading;
       }
@@ -134,145 +240,122 @@ public class Drive extends Base {
       double xPow = (relX / (Math.abs(relY) + Math.abs(relX))) * driveSpeedCap,
           yPow = (relY / (Math.abs(relX) + Math.abs(relY))) * driveSpeedCap;
 
-      if (limitPower) {
-        if (Math.abs(yDiff) > 7) {
-          if (yPow < 0) {
-            yPow = Math.min(-powerLowerBound, yPow);
-          } else {
-            yPow = Math.max(powerLowerBound, yPow);
-          }
-        }
-        if (Math.abs(xDiff) > 7) {
-          if (xPow < 0) {
-            xPow = Math.min(-powerLowerBound, xPow);
-          } else {
-            xPow = Math.max(powerLowerBound, xPow);
-          }
-        }
+      xPow = xDiff * 0.05;
+      yPow = -yDiff * 0.05;
+
+      if (Math.abs(getRobotDistanceFromPoint(wp.get(wp.size() - 1))) < 5) {
+        xPow = xDiff * 0.1;
+        yPow = -yDiff * 0.1;
+      } else {
+        xPow = xDiff * 0.1;
+        yPow = -yDiff * 0.1;
       }
-      System.out.println(xPow + " " + yPow);
-      driveFieldCentric(odometry.getAngle(), xPow, 0.05 * angDiff, yPow);
+
+      if (Math.abs(xDiff) <= xError) {
+        xPow = 0;
+      }
+      if (Math.abs(yDiff) <= yError) {
+        yPow = 0;
+      }
+
+      System.out.println(wp.size());
+      driveFieldCentric(yPow, 0.03 * angDiff, xPow);
       lastLhInd = possInd;
     }
     stopDrive();
   }
 
-  public void traversePath(
-      ArrayList<Point> wp,
-      double heading,
-      double driveSpeedCap,
-      double powLb,
-      double xError,
-      double yError,
-      double angleError,
-      int lookAheadDist,
-      double timeout) {
-    traversePath(
-        wp,
-        heading,
-        driveSpeedCap,
-        true,
-        powLb,
-        xError,
-        yError,
-        angleError,
-        lookAheadDist,
-        timeout);
-  }
-
-  public void traversePath(
-      ArrayList<Point> wp,
-      double heading,
-      double xError,
-      double yError,
-      double angleError,
-      int lookAheadDist,
-      double timeout) {
-    traversePath(wp, heading, 1, false, -1, xError, yError, angleError, lookAheadDist, timeout);
-  }
-
-  public void moveToPosition(
-      double targetXPos,
-      double targetYPos,
-      double targetAngle,
-      double xAccuracy,
-      double yAccuracy,
-      double angleAccuracy,
-      double timeout,
-      double powerlB) {
-    ArrayList<Point> pt = new ArrayList<>();
-    pt.add(getCurrentPosition());
-    pt.add(new Point(targetXPos, targetYPos));
-    ArrayList<Point> wps = PathGenerator.generateLinearSpline(pt);
-    traversePath(wps, targetAngle, 1, powerlB, xAccuracy, yAccuracy, angleAccuracy, 10, timeout);
-    stopDrive();
-  }
-
   public void turnTo(double targetAngle, long timeout, double powerCap, double minDifference) {
     // GM0
-    double currAngle = getAngle();
+    double currAngle = odometry.getAngle();
     ElapsedTime time = new ElapsedTime();
     while (Math.abs(currAngle - targetAngle) > minDifference
         && time.milliseconds() < timeout
         && ((LinearOpMode) opMode).opModeIsActive()) {
       resetCache();
-      updateOdometry();
-      currAngle = getAngle();
+      updatePosition();
+      currAngle = odometry.getAngle();
       double angleDiff = Angle.normalize(currAngle - targetAngle);
       double calcP = Range.clip(angleDiff * 0.01, -powerCap, powerCap);
-      setDrivePowers(calcP, calcP, calcP, calcP);
+      driveFieldCentric(0, calcP, 0);
     }
 
     stopDrive();
   }
 
-  // Positional Data
-  public void updateOdometry() {
+  public void updatePosition() {
     odometry.updatePosition(
-        odoL.encoderReading(), odoR.encoderReading(), odoN.encoderReading(), getAngle());
+        -odoL.encoderReading(),
+        -odoN.encoderReading(),
+        getAngleImu()); // forward shold be neg perp, right neg parallel.
+  }
+
+  public double getX() {
+    return getCurrentPosition().xP;
+  }
+
+  public double getY() {
+    return getCurrentPosition().yP;
+  }
+
+  public double getAngleOdo() {
+    return getCurrentPosition().ang;
   }
 
   public Point getCurrentPosition() {
-    updateOdometry();
+    updatePosition();
     return new Point(odometry.getX(), odometry.getY(), odometry.getAngle());
   }
 
-  public double getAngle() {
-    Orientation angles =
-        gyro.getAngularOrientation(
-            AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES); // ZYX is Original
-    return Angle.normalize(angles.firstAngle + initAng);
+  public double getAngleImu() {
+    return Angle.normalize(
+        getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) + initAng); // add init angle
+  }
+
+  public YawPitchRollAngles getRobotYawPitchRollAngles() {
+    return gyro.getRobotYawPitchRollAngles();
   }
 
   // Driving
-  public void driveFieldCentric(double baseAngle, double drive, double turn, double strafe) {
-    // Math for Field Centric 2.0:
-    // https://github.com/FTCLib/FTCLib/blob/master/core/src/main/java/com/arcrobotics/ftclib/drivebase/MecanumDrive.java
+  public void driveFieldCentric(double drive, double turn, double strafe) {
+    // https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html#field-centric
     double fRightPow, bRightPow, fLeftPow, bLeftPow;
+    double botHeading = -Math.toRadians(getAngleImu());
+    System.out.println(drive + " " + turn + " " + strafe);
 
-    double bLeftAngle = Math.toRadians(baseAngle + 135);
-    double fLeftAngle = Math.toRadians(baseAngle + 45);
-    double bRightAngle = Math.toRadians(baseAngle + 225);
-    double fRightAngle = Math.toRadians(baseAngle + 315);
+    double rotX = drive * Math.cos(botHeading) - strafe * Math.sin(botHeading);
+    double rotY = drive * Math.sin(botHeading) + strafe * Math.cos(botHeading);
 
-    fRightPow =
-        (drive * Math.sin(fRightAngle) + strafe * Math.cos(fRightAngle)) / Math.sqrt(1) + turn;
-    bRightPow =
-        (drive * Math.sin(bRightAngle) + strafe * Math.cos(bRightAngle)) / Math.sqrt(1) + turn;
-    fLeftPow = (drive * Math.sin(fLeftAngle) + strafe * Math.cos(fLeftAngle)) / Math.sqrt(1) + turn;
-    bLeftPow = (drive * Math.sin(bLeftAngle) + strafe * Math.cos(bLeftAngle)) / Math.sqrt(1) + turn;
+    double denominator = Math.max(Math.abs(strafe) + Math.abs(drive) + Math.abs(turn), 1);
+    fLeftPow = (rotY + rotX + turn) / denominator;
+    bLeftPow = (rotY - rotX + turn) / denominator;
+    fRightPow = (rotY - rotX - turn) / denominator;
+    bRightPow = (rotY + rotX - turn) / denominator;
 
-    double[] calculatedPower = scalePowers(bLeftPow, fLeftPow, bRightPow, fRightPow);
-    fLeftPow = calculatedPower[0];
-    bLeftPow = calculatedPower[1];
-    fRightPow = calculatedPower[2];
-    bRightPow = calculatedPower[3];
+    setDrivePowers(bLeftPow, fLeftPow, bRightPow, fRightPow);
+  }
+
+  public void driveFieldCentricAuto(double drive, double turn, double strafe) {
+    // https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html#field-centric
+    double fRightPow, bRightPow, fLeftPow, bLeftPow;
+    double botHeading = -Math.toRadians(getAngleOdo());
+    System.out.println(drive + " " + turn + " " + strafe);
+
+    double rotX = drive * Math.cos(botHeading) - strafe * Math.sin(botHeading);
+    double rotY = drive * Math.sin(botHeading) + strafe * Math.cos(botHeading);
+
+    double denominator = Math.max(Math.abs(strafe) + Math.abs(drive) + Math.abs(turn), 1);
+    fLeftPow = (rotY + rotX + turn) / denominator;
+    bLeftPow = (rotY - rotX + turn) / denominator;
+    fRightPow = (rotY - rotX - turn) / denominator;
+    bRightPow = (rotY + rotX - turn) / denominator;
 
     setDrivePowers(bLeftPow, fLeftPow, bRightPow, fRightPow);
   }
 
   public void driveRobotCentric(double drive, double turn, double strafe) {
-    // GM0
+    // https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html#robot-centric-final-sample-code
+
     double fRightPow = 0, bRightPow = 0, fLeftPow = 0, bLeftPow = 0;
 
     fLeftPow = -drive + turn - strafe;
@@ -290,6 +373,12 @@ public class Drive extends Base {
   }
 
   public void setDrivePowers(double bLeftPow, double fLeftPow, double bRightPow, double fRightPow) {
+    //    if(gyro.getAngularOrientation().thirdAngle > 5){ // anti-tip
+    //      dt.stopDrive();
+    //      dt.setDrivePowers(-0.5, 0, -0.5, 0);
+    //      return;
+    //    }
+
     bLeftMotor.setPower(bLeftPow);
     fLeftMotor.setPower(fLeftPow);
     bRightMotor.setPower(bRightPow);
@@ -298,6 +387,10 @@ public class Drive extends Base {
 
   public void stopDrive() {
     setDrivePowers(0, 0, 0, 0);
+  }
+
+  public String getTicks() {
+    return odoL.encoderReading() + " x " + odoN.encoderReading();
   }
 
   public double[] scalePowers(
@@ -319,11 +412,13 @@ public class Drive extends Base {
   // Misc. Functions / Overloaded Method Storage
 
   public double getRobotDistanceFromPoint(Point p2) {
-    return Math.sqrt(
-        (p2.yP - odometry.getY()) * (p2.yP - odometry.getY())
-            + (p2.xP - odometry.getX()) * (p2.xP - odometry.getX()));
+    return Math.sqrt((p2.yP - getY()) * (p2.yP - getY()) + (p2.xP - getX()) * (p2.xP - getX()));
   }
 
+  public void update() {
+    resetCache();
+    updatePosition();
+  }
   // BULK-READING FUNCTIONS
   public void resetCache() {
     // Clears cache of all hubs
@@ -331,15 +426,6 @@ public class Drive extends Base {
       hub.clearBulkCache();
     }
   }
-
-  //    private double getVoltage() {
-  //        double voltage = Double.MIN_VALUE;
-  //        for (LynxModule hub : allHubs) {
-  //            voltage = Math.max(voltage, hub.getInputVoltage(VoltageUnit.VOLTS));
-  //        }
-  //
-  //        return voltage;
-  //    }
 
   @Override
   public void runOpMode() throws InterruptedException {}
