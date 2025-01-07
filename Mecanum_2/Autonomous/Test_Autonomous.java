@@ -35,8 +35,9 @@ public class Test_Autonomous extends Base {
                 new Point(0, 0))));
 
     sleep(500);
-    // SplinePathConstantHeading(path1,  30, 1, 0.5, 3, 3, 2, 10, 100000);
-    moveToPosition(10, 70, 30, 10000);
+  
+    SplinePathConstantHeading(path1,  30, 1, 0.5, 3, 3, 2, 10, 100000);
+    //moveToPosition(10, 70, 30, 10000);
     //        moveToPosition(0,  0,  30, 10000);
     //        moveToPosition(10,  70,  30, 10000);
     //        moveToPosition(0,  0,  30, 10000);
