@@ -142,65 +142,21 @@ public abstract class Base extends LinearOpMode {
 
   // Autonomous Movement (Note that you do not have to insert the current position into any of the
   // weighpoints)
-  public void SplinePathConstantHeading(
-      ArrayList<Point> pts,
-      double heading,
-      double driveSpeedCap,
-      double xError,
-      double yError,
-      double angleError,
-      int lookAheadDist,
-      double timeout) {
-    Point curLoc = dt.getCurrentPosition();
-    ArrayList<Point> wps = PathGenerator.interpSplinePath(pts, curLoc);
-    dt.traversePath(
-        wps, heading, driveSpeedCap, false, -1, xError, yError, angleError, lookAheadDist, timeout);
-  }
-
-  public void SplinePathConstantHeading(
-      ArrayList<Point> pts,
-      double heading,
-      double driveSpeedCap,
-      double powLb,
-      double xError,
-      double yError,
-      double angleError,
-      int lookAheadDist,
-      double timeout) {
-    Point curLoc = dt.getCurrentPosition();
-    ArrayList<Point> wps = PathGenerator.interpSplinePath(pts, curLoc);
-    dt.traversePath(
-        wps,
-        heading,
-        driveSpeedCap,
-        true,
-        powLb,
-        xError,
-        yError,
-        angleError,
-        lookAheadDist,
-        timeout);
-  }
-
-  public void LinearPathConstantHeading(
-      ArrayList<Point> pts,
-      double heading,
-      double driveSpeedCap,
-      double powLb,
-      double xError,
-      double yError,
-      double angleError,
-      int lookAheadDist,
-      double timeout) {
-    Point curLoc = dt.getCurrentPosition();
-    ArrayList<Point> wps = new ArrayList<>();
-    wps.add(curLoc);
-    wps.addAll(pts);
-    wps = PathGenerator.generateLinearSpline(wps);
-    dt.traversePath(
-        wps, heading, driveSpeedCap, powLb, xError, yError, angleError, lookAheadDist, timeout);
-  }
-
+    public void ChaseTheCarrotConstantHeading(ArrayList<Point> wp,
+                                              int switchTolerance,
+                                              int skip,
+                                              double heading,
+                                              double error,
+                                              double angleError,
+                                              double normalMovementConstant,
+                                              double finalMovementConstant,
+                                              double turnConstant,
+                                              double movementD,
+                                              double turnD,
+                                              double timeout, double powerCap) {
+        ChaseTheCarrot(wp, switchTolerance, skip, false, false, heading, error, angleError, normalMovementConstant, finalMovementConstant, turnConstant, movementD, turnD, timeout, powerCap);
+    }
+  
   public void turnTo(double targetAngle, long timeout, double powerCap, double minDifference) {
     dt.turnTo(targetAngle, timeout, powerCap, minDifference);
   }
