@@ -156,6 +156,22 @@ public abstract class Base extends LinearOpMode {
                                               double timeout, double powerCap) {
         ChaseTheCarrot(wp, switchTolerance, skip, false, false, heading, error, angleError, normalMovementConstant, finalMovementConstant, turnConstant, movementD, turnD, timeout, powerCap);
     }
+
+      public void ChaseTheCarrotSplineHeading(ArrayList<Point> wp,
+                                              int switchTolerance,
+                                              int skip,
+                                              double heading,
+                                              double error,
+                                              double angleError,
+                                              double normalMovementConstant,
+                                              double finalMovementConstant,
+                                              double turnConstant,
+                                              double movementD,
+                                              double turnD,
+                                              double timeout, double powerCap) {
+        ChaseTheCarrot(wp, switchTolerance, skip, false, false, Double.MAX_VALUE, error, angleError, normalMovementConstant, finalMovementConstant, turnConstant, movementD, turnD, timeout, powerCap);
+    }
+
   
   public void turnTo(double targetAngle, long timeout, double powerCap, double minDifference) {
     dt.turnTo(targetAngle, timeout, powerCap, minDifference);
